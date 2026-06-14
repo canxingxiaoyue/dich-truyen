@@ -100,7 +100,7 @@
         th {
             position: sticky; top: 0; background-color: var(--th-bg);
             border: 1px solid var(--border-color); border-top: none;
-            padding: 10px; font-weight: 600; width: 16.666%; /* Chia đều cho 6 cột */
+            padding: 10px; font-weight: 600; width: 16.666%;
             z-index: 10;
         }
         td {
@@ -260,7 +260,6 @@
         document.body.style.fontSize = currentFontSize + 'px';
 
         function createEmptyRow() {
-            // Khởi tạo hàng trống đủ 6 trường
             return { raw: '', pinyin: '', meaning: '', translation: '', qt: '', edit: '' };
         }
 
@@ -364,7 +363,7 @@
             }
         }
 
-        // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
+        // ---------------- SỰ KIỆN DÁN (SUPER PASTE) BẤT TỬ KÝ TỰ TÀNG HÌNH ----------------
         tbody.addEventListener('paste', (e) => {
             const targetCell = e.target.closest('td');
             if (!targetCell) return;
@@ -372,14 +371,16 @@
             const clipboardText = (e.originalEvent || e).clipboardData.getData('text/plain');
             if (!clipboardText) return;
 
-            // Xử lý tách dòng theo mọi định dạng xuống dòng ẩn
+            // 1. Tách dòng
             let lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
             
-            // SUPER PASTE: Lột sạch khoảng trắng thừa và XÓA TOÀN BỘ CÁC DÒNG TRỐNG
-            lines = lines.map(line => line.replace(/^[\s\u2003\u3000\xA0]+/, '').trimEnd());
+            // 2. Lột sạch mọi ký tự vô hình (Zero-width) và khoảng trắng 2 đầu
+            lines = lines.map(line => line.replace(/[\u200B-\u200F\uFEFF\u202A-\u202E]/g, '').trim());
+            
+            // 3. Xóa sổ hoàn toàn các dòng rỗng (chỉ giữ lại dòng có chữ thực sự)
             lines = lines.filter(line => line !== '');
 
-            // Nếu chỉ copy đúng 1 từ/1 câu ngắn không có cột, để trình duyệt dán như bình thường
+            // Nếu chỉ copy đúng 1 từ ngắn, để trình duyệt dán như bình thường
             if (lines.length <= 1 && !clipboardText.includes('\t')) return;
 
             e.preventDefault(); 
@@ -541,7 +542,6 @@
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
                         addHistoryEntry();
-                        // Chèn thêm cột QT cho các file cũ nếu bị thiếu (để bảng không bị lỗi)
                         data = importedData.map(row => {
                             if(typeof row.qt === 'undefined') row.qt = '';
                             return row;
