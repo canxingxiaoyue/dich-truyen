@@ -25,7 +25,7 @@
             --btn-secondary: #64748b; --btn-secondary-hover: #475569;
 
             --row-hover: rgba(0, 0, 0, 0.03);
-            --row-active: rgba(0, 0, 0, 0.06);
+            --row-active: rgba(239, 68, 68, 0.15); /* Chuyển sang màu đỏ nhạt khi bôi đỏ quét chọn hàng */
             --th-bg: #f4f4f5;
         }
 
@@ -37,7 +37,7 @@
             --btn-warning: #d97706; --btn-warning-hover: #b45309;
             --btn-info: #8b5cf6; --btn-info-hover: #a78bfa;
             --row-hover: rgba(255, 255, 255, 0.05); 
-            --row-active: rgba(255, 255, 255, 0.1);
+            --row-active: rgba(239, 68, 68, 0.25);
             --th-bg: #1e293b;
         }
 
@@ -84,13 +84,6 @@
             margin-left: 10px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-color); 
             background: var(--header-bg); color: var(--text-color); outline: none; font-size: 0.9rem; font-family: inherit;
             cursor: pointer; font-weight: 600;
-        }
-
-        .color-picker-wrapper {
-            display: flex; align-items: center; gap: 5px; margin-left: 10px; font-weight: 600; font-size: 0.9rem;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent;
         }
 
         .toolbar {
@@ -300,7 +293,7 @@
         
         let data = JSON.parse(localStorage.getItem('translationData')) || [createEmptyRow()];
         let currentRowIndex = -1; // Theo dõi hàng click đơn
-        let selectedRowIndices = []; // Danh sách hàng được bôi đen chọn bằng tổ hợp Ctrl+Shift+Drag
+        let selectedRowIndices = []; // Danh sách hàng được bôi đỏ chọn bằng tổ hợp Ctrl+Shift+Drag
 
         // Các biến điều khiển cử chỉ quét chọn hàng loạt
         let isDragSelecting = false;
@@ -463,7 +456,7 @@
                     }
                 };
                 item.appendChild(info);
-                restoreBtn);
+                item.appendChild(restoreBtn); // Sửa hoàn toàn lỗi cú pháp tại đây
                 historyListDiv.appendChild(item);
             }
         }
