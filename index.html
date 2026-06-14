@@ -248,7 +248,7 @@
 
     <script>
         const { pinyin } = pinyinPro;
-        // Cập nhật mảng quản lý 6 cột
+        // Quản lý 6 cột
         const columns = ['raw', 'pinyin', 'meaning', 'translation', 'qt', 'edit'];
         const tbody = document.getElementById('table-body');
         
@@ -260,7 +260,7 @@
         document.body.style.fontSize = currentFontSize + 'px';
 
         function createEmptyRow() {
-            // Cập nhật khởi tạo dữ liệu hàng trống có đủ 6 trường
+            // Khởi tạo hàng trống đủ 6 trường
             return { raw: '', pinyin: '', meaning: '', translation: '', qt: '', edit: '' };
         }
 
@@ -290,7 +290,7 @@
             columns.forEach(col => {
                 const td = document.createElement('td');
                 td.contentEditable = true;
-                td.innerText = rowObj[col] || ''; // Tránh lỗi undefined nếu tải dữ liệu cũ lên
+                td.innerText = rowObj[col] || ''; 
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
@@ -364,7 +364,7 @@
             }
         }
 
-        // ---------------- SỰ KIỆN DÁN (PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
+        // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
         tbody.addEventListener('paste', (e) => {
             const targetCell = e.target.closest('td');
             if (!targetCell) return;
@@ -372,8 +372,15 @@
             const clipboardText = (e.originalEvent || e).clipboardData.getData('text/plain');
             if (!clipboardText) return;
 
-            const lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
-            if (lines.length === 1 && !lines[0].includes('\t')) return;
+            // Xử lý tách dòng theo mọi định dạng xuống dòng ẩn
+            let lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
+            
+            // SUPER PASTE: Lột sạch khoảng trắng thừa và XÓA TOÀN BỘ CÁC DÒNG TRỐNG
+            lines = lines.map(line => line.replace(/^[\s\u2003\u3000\xA0]+/, '').trimEnd());
+            lines = lines.filter(line => line !== '');
+
+            // Nếu chỉ copy đúng 1 từ/1 câu ngắn không có cột, để trình duyệt dán như bình thường
+            if (lines.length <= 1 && !clipboardText.includes('\t')) return;
 
             e.preventDefault(); 
             addHistoryEntry(); 
@@ -383,8 +390,6 @@
             const colIndex = Array.from(tr.children).indexOf(targetCell);
 
             for (let i = 0; i < lines.length; i++) {
-                if (i === lines.length - 1 && lines[i].trim() === '') continue;
-
                 const textLine = lines[i];
                 const rowIndex = startRowIndex + i;
                 const cells = textLine.split('\t');
@@ -400,7 +405,7 @@
 
                 for (let j = 0; j < cells.length; j++) {
                     const targetColIdx = colIndex + j;
-                    if (targetColIdx >= 6) break; // Đã cập nhật chặn mức độ 6 cột
+                    if (targetColIdx >= 6) break; // Giới hạn 6 cột
 
                     const cellValue = cells[j];
                     data[rowIndex][columns[targetColIdx]] = cellValue;
@@ -493,7 +498,7 @@
                 showToast('⚠️ Cột Bản edit đang trống!', 'var(--btn-warning)');
                 return;
             }
-            // Sao chép cột cuối cùng (Bản edit)
+            // Sao chép cột cuối cùng (Bản edit) - Giữ khoảng cách 1 dòng rỗng giữa các đoạn
             const textToCopy = data.map(row => (row.edit || '').trim()).join('\r\n\r\n'); 
             navigator.clipboard.writeText(textToCopy).then(() => {
                 showToast('✅ Đã sao chép chương dạng tiểu thuyết!', 'var(--btn-success)');
@@ -536,7 +541,7 @@
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
                         addHistoryEntry();
-                        // Chèn thêm cột qt cho file cũ nếu thiếu
+                        // Chèn thêm cột QT cho các file cũ nếu bị thiếu (để bảng không bị lỗi)
                         data = importedData.map(row => {
                             if(typeof row.qt === 'undefined') row.qt = '';
                             return row;
