@@ -51,6 +51,13 @@
             font-size: 16px; 
         }
 
+        /* Khóa bôi đen chữ mặc định khi đang trong chế độ kéo quét chọn nhiều hàng */
+        body.selecting-rows, body.selecting-rows * {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: row-resize !important;
+        }
+
         /* HEADER & TOOLBAR */
         header {
             flex-shrink: 0; background-color: var(--header-bg);
@@ -292,8 +299,12 @@
         const tbody = document.getElementById('table-body');
         
         let data = JSON.parse(localStorage.getItem('translationData')) || [createEmptyRow()];
-        let currentRowIndex = -1; // Theo dõi hàng vừa click đơn
-        let selectedRowIndices = []; // Danh sách mảng các hàng đang được chọn (để xóa hàng loạt)
+        let currentRowIndex = -1; // Theo dõi hàng click đơn
+        let selectedRowIndices = []; // Danh sách hàng được bôi đen chọn bằng tổ hợp Ctrl+Shift+Drag
+
+        // Các biến điều khiển cử chỉ quét chọn hàng loạt
+        let isDragSelecting = false;
+        let dragStartRowIdx = -1;
         let lastHistoryTime = 0; 
 
         // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
@@ -452,41 +463,81 @@
                     }
                 };
                 item.appendChild(info);
-                item.appendChild(restoreBtn);
+                restoreBtn);
                 historyListDiv.appendChild(item);
             }
         }
 
-        // ---------------- THUẬT TOÁN TÍNH TOÁN CÁC HÀNG ĐANG ĐƯỢC BÔI ĐEN ----------------
-        function getSelectedRows() {
-            const selection = window.getSelection();
-            if (!selection || selection.isCollapsed || selection.rangeCount === 0) return [];
-            
-            const trs = Array.from(tbody.children);
-            const selectedTrs = [];
-            
-            trs.forEach(tr => {
-                // Kiểm tra xem trình duyệt có đang bôi đen bất cứ thành phần nào của TR này ko
-                if (selection.containsNode(tr, true)) {
-                    selectedTrs.push(tr);
-                }
-            });
-            return selectedTrs;
-        }
+        // ---------------- ĐIỀU KHIỂN CỬ CHỈ QUÉT CHỌN HÀNG LOẠT (CTRL + SHIFT + DRAG) ----------------
 
-        // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
-        document.getElementById('table-container').addEventListener('mouseup', () => {
-            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen và không ảnh hưởng bôi đen chữ
-                const selectedRows = getSelectedRows();
-                if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
-                    tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
-                    selectedRowIndices = selectedRows.map(tr => Array.from(tbody.children).indexOf(tr));
-                    selectedRowIndices.forEach(idx => {
-                        if (tbody.children[idx]) tbody.children[idx].classList.add('active-row');
-                    });
-                }
-            }, 10);
+        // 1. Nhấp đơn bình thường (khi bạn sửa chữ)
+        tbody.addEventListener('focusin', (e) => {
+            if (isDragSelecting) return; // Nếu đang quét chọn hàng loạt thì ko kích hoạt nhấp đơn
+            const tr = e.target.closest('tr');
+            if (tr) {
+                tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
+                tr.classList.add('active-row');
+                currentRowIndex = Array.from(tbody.children).indexOf(tr);
+                selectedRowIndices = [currentRowIndex]; // Mặc định chọn 1 hàng này
+            }
         });
+
+        // 2. Click chuột xuống (Mousedown)
+        tbody.addEventListener('mousedown', (e) => {
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+
+            // Kiểm tra xem bạn có đang giữ Ctrl + Shift không
+            if (e.ctrlKey && e.shiftKey) {
+                e.preventDefault(); // Ngăn trình duyệt nhảy con trỏ gõ phím vào ô
+                document.body.classList.add('selecting-rows'); // Tắt tính năng bôi đen chữ của trình duyệt
+                
+                isDragSelecting = true;
+                dragStartRowIdx = Array.from(tbody.children).indexOf(tr);
+                
+                // Reset lại vùng màu chọn cũ
+                tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
+                
+                tr.classList.add('active-row');
+                selectedRowIndices = [dragStartRowIdx];
+                currentRowIndex = dragStartRowIdx;
+            }
+        });
+
+        // 3. Rê chuột quét qua các hàng khác (Mouseover)
+        tbody.addEventListener('mouseover', (e) => {
+            if (!isDragSelecting) return;
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+
+            const currentIdx = Array.from(tbody.children).indexOf(tr);
+            if (currentIdx === -1) return;
+
+            // Xóa sạch vùng màu chọn nháp cũ
+            tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
+            
+            // Tính toán khoảng quét từ hàng bắt đầu kéo đến hàng đang rê chuột qua
+            const min = Math.min(dragStartRowIdx, currentIdx);
+            const max = Math.max(dragStartRowIdx, currentIdx);
+            
+            selectedRowIndices = [];
+            for (let i = min; i <= max; i++) {
+                if (tbody.children[i]) {
+                    tbody.children[i].classList.add('active-row');
+                    selectedRowIndices.push(i);
+                }
+            }
+        });
+
+        // 4. Thả chuột ở bất kỳ đâu trên màn hình (Mouseup)
+        document.addEventListener('mouseup', () => {
+            if (isDragSelecting) {
+                isDragSelecting = false;
+                dragStartRowIdx = -1;
+                document.body.classList.remove('selecting-rows'); // Mở lại bôi đen chữ mặc định
+            }
+        });
+
 
         // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
         tbody.addEventListener('paste', (e) => {
@@ -571,17 +622,6 @@
             debounceSave();
         });
 
-        // Đổi mousedown sang focusin để KHÔNG BỊ LỖI hủy bôi đen chữ của trình duyệt
-        tbody.addEventListener('focusin', (e) => {
-            const tr = e.target.closest('tr');
-            if (tr) {
-                tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
-                tr.classList.add('active-row');
-                currentRowIndex = Array.from(tbody.children).indexOf(tr);
-                selectedRowIndices = [currentRowIndex]; // Mặc định chỉ có 1 hàng này được chọn
-            }
-        });
-
         document.getElementById('btn-add').addEventListener('click', () => {
             const newRow = createEmptyRow();
             data.push(newRow);
@@ -591,13 +631,13 @@
             container.scrollTop = container.scrollHeight;
         });
 
-        // NÚT XÓA HÀNG (Hỗ trợ xóa 1 hàng hoặc xóa hàng loạt các hàng đang bôi đen)
+        // NÚT XÓA HÀNG (Hỗ trợ xóa 1 hàng hoặc xóa hàng loạt các hàng đang được bôi đỏ quét chọn)
         document.getElementById('btn-delete').addEventListener('click', () => {
             if (selectedRowIndices.length > 0) {
                 const count = selectedRowIndices.length;
                 const confirmMsg = count === 1 
                     ? "Bạn có chắc chắn muốn xóa hàng đang chọn?" 
-                    : `⚠️ Bạn có chắc chắn muốn xóa đồng thời ${count} hàng đang bôi đen lựa chọn không?`;
+                    : `⚠️ Bạn có chắc chắn muốn xóa đồng thời ${count} hàng đang được chọn không?`;
                     
                 if (confirm(confirmMsg)) {
                     addHistoryEntry(); // Lưu lịch sử dự phòng trước khi xóa số lượng lớn
@@ -623,13 +663,12 @@
                     // Reset lại vùng chọn và trạng thái
                     currentRowIndex = -1;
                     selectedRowIndices = [];
-                    window.getSelection().removeAllRanges(); // Xóa bôi đen thực tế trên màn hình
                     
                     debounceSave();
                     showToast(`🗑️ Đã xóa thành công ${count} hàng!`, 'var(--btn-danger)');
                 }
             } else {
-                alert("Vui lòng click chọn hoặc bôi đen chọn các hàng bạn muốn xóa!");
+                alert("Vui lòng click chọn hoặc giữ Ctrl + Shift + Rê chuột để quét chọn các hàng muốn xóa!");
             }
         });
 
