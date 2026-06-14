@@ -79,6 +79,13 @@
             cursor: pointer; font-weight: 600;
         }
 
+        .color-picker-wrapper {
+            display: flex; align-items: center; gap: 5px; margin-left: 10px; font-weight: 600; font-size: 0.9rem;
+        }
+        .color-picker-wrapper input[type="color"] {
+            width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent;
+        }
+
         .toolbar {
             padding: 10px 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
         }
@@ -204,7 +211,7 @@
             <div class="divider"></div>
             
             <button class="btn-add" id="btn-add">➕ Thêm hàng</button>
-            <button class="btn-delete" id="btn-delete">🗑️ Xóa hàng</button>
+            <button class="btn-delete" id="btn-delete" title="Xóa các hàng đang bôi đen hoặc đang chọn">🗑️ Xóa hàng</button>
             
             <div class="divider"></div>
             
@@ -280,11 +287,13 @@
 
     <script>
         const { pinyin } = pinyinPro;
+        // Quản lý 6 cột
         const columns = ['raw', 'pinyin', 'meaning', 'translation', 'qt', 'edit'];
         const tbody = document.getElementById('table-body');
         
         let data = JSON.parse(localStorage.getItem('translationData')) || [createEmptyRow()];
-        let currentRowIndex = -1;
+        let currentRowIndex = -1; // Theo dõi hàng vừa click đơn
+        let selectedRowIndices = []; // Danh sách mảng các hàng đang được chọn (để xóa hàng loạt)
         let lastHistoryTime = 0; 
 
         // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
@@ -448,6 +457,38 @@
             }
         }
 
+        // ---------------- THUẬT TOÁN TÍNH TOÁN CÁC HÀNG ĐANG ĐƯỢC BÔI ĐEN ----------------
+        function getSelectedRows() {
+            const selection = window.getSelection();
+            // Nếu không có vùng chọn, hoặc vùng chọn chỉ là nhấp con trỏ đơn (collapsed)
+            if (!selection || selection.isCollapsed || selection.rangeCount === 0) return [];
+            
+            const trs = Array.from(tbody.children);
+            const selectedTrs = [];
+            
+            trs.forEach(tr => {
+                // Kiểm tra xem trình duyệt có đang bôi đen bất cứ thành phần nào của TR này ko
+                if (selection.containsNode(tr, true)) {
+                    selectedTrs.push(tr);
+                }
+            });
+            return selectedTrs;
+        }
+
+        // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
+        document.getElementById('table-container').addEventListener('mouseup', () => {
+            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen
+                const selectedRows = getSelectedRows();
+                if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
+                    tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
+                    selectedRowIndices = selectedRows.map(tr => Array.from(tbody.children).indexOf(tr));
+                    selectedRowIndices.forEach(idx => {
+                        if (tbody.children[idx]) tbody.children[idx].classList.add('active-row');
+                    });
+                }
+            }, 10);
+        });
+
         // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
         tbody.addEventListener('paste', (e) => {
             const targetCell = e.target.closest('td');
@@ -534,10 +575,10 @@
         tbody.addEventListener('mousedown', (e) => {
             const tr = e.target.closest('tr');
             if (tr) {
-                const prev = tbody.querySelector('.active-row');
-                if (prev) prev.classList.remove('active-row');
+                tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
                 tr.classList.add('active-row');
                 currentRowIndex = Array.from(tbody.children).indexOf(tr);
+                selectedRowIndices = [currentRowIndex]; // Mặc định chỉ có 1 hàng này được chọn
             }
         });
 
@@ -550,20 +591,45 @@
             container.scrollTop = container.scrollHeight;
         });
 
+        // NÚT XÓA HÀNG (Hỗ trợ xóa 1 hàng hoặc xóa hàng loạt các hàng đang bôi đen)
         document.getElementById('btn-delete').addEventListener('click', () => {
-            if (currentRowIndex >= 0 && currentRowIndex < data.length) {
-                addHistoryEntry();
-                tbody.children[currentRowIndex].remove();
-                data.splice(currentRowIndex, 1);
-                if (data.length === 0) {
-                    const newRow = createEmptyRow();
-                    data.push(newRow);
-                    appendRowToDOM(newRow, 0);
+            if (selectedRowIndices.length > 0) {
+                const count = selectedRowIndices.length;
+                const confirmMsg = count === 1 
+                    ? "Bạn có chắc chắn muốn xóa hàng đang chọn?" 
+                    : `⚠️ Bạn có chắc chắn muốn xóa đồng thời ${count} hàng đang bôi đen lựa chọn không?`;
+                    
+                if (confirm(confirmMsg)) {
+                    addHistoryEntry(); // Lưu lịch sử dự phòng trước khi xóa số lượng lớn
+                    
+                    // Sắp xếp thứ tự các hàng cần xóa từ dưới lên trên (giảm dần)
+                    // để khi xóa không bị lệch chỉ số mảng (index) của các hàng còn lại
+                    const sortedIndices = [...selectedRowIndices].sort((a, b) => b - a);
+                    
+                    sortedIndices.forEach(idx => {
+                        if (tbody.children[idx]) {
+                            tbody.children[idx].remove();
+                            data.splice(idx, 1);
+                        }
+                    });
+                    
+                    // Luôn giữ lại tối thiểu 1 hàng trống nếu lỡ tay xóa hết sạch
+                    if (data.length === 0) {
+                        const newRow = createEmptyRow();
+                        data.push(newRow);
+                        appendRowToDOM(newRow, 0);
+                    }
+                    
+                    // Reset lại vùng chọn và trạng thái
+                    currentRowIndex = -1;
+                    selectedRowIndices = [];
+                    window.getSelection().removeAllRanges(); // Xóa bôi đen thực tế trên màn hình
+                    
+                    debounceSave();
+                    showToast(`🗑️ Đã xóa thành công ${count} hàng!`, 'var(--btn-danger)');
                 }
-                currentRowIndex = -1;
-                debounceSave();
             } else {
-                alert("Vui lòng nhấp vào một ô trong dòng bạn muốn xóa!");
+                alert("Vui lòng click chọn hoặc bôi đen chọn các hàng bạn muốn xóa!");
             }
         });
 
@@ -572,6 +638,7 @@
                 addHistoryEntry();
                 data = [createEmptyRow()];
                 currentRowIndex = -1;
+                selectedRowIndices = [];
                 renderTable();
                 localStorage.setItem('translationData', JSON.stringify(data));
                 showToast('🔄 Đã làm mới toàn bộ bảng!', 'var(--btn-warning)');
