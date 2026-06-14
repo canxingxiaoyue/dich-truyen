@@ -460,7 +460,6 @@
         // ---------------- THUẬT TOÁN TÍNH TOÁN CÁC HÀNG ĐANG ĐƯỢC BÔI ĐEN ----------------
         function getSelectedRows() {
             const selection = window.getSelection();
-            // Nếu không có vùng chọn, hoặc vùng chọn chỉ là nhấp con trỏ đơn (collapsed)
             if (!selection || selection.isCollapsed || selection.rangeCount === 0) return [];
             
             const trs = Array.from(tbody.children);
@@ -477,7 +476,7 @@
 
         // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
         document.getElementById('table-container').addEventListener('mouseup', () => {
-            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen
+            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen và không ảnh hưởng bôi đen chữ
                 const selectedRows = getSelectedRows();
                 if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
                     tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
@@ -572,7 +571,8 @@
             debounceSave();
         });
 
-        tbody.addEventListener('mousedown', (e) => {
+        // Đổi mousedown sang focusin để KHÔNG BỊ LỖI hủy bôi đen chữ của trình duyệt
+        tbody.addEventListener('focusin', (e) => {
             const tr = e.target.closest('tr');
             if (tr) {
                 tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
