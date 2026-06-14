@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>công cụ edit</title>
+    <style>
+        /* CSS Variables */
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --header-bg: #ffffff;
+            --border-color: #cbd5e1;
+            
+            --btn-primary: #3b82f6; --btn-primary-hover: #2563eb;
+            --btn-danger: #ef4444;  --btn-danger-hover: #dc2626;
+            --btn-success: #10b981; --btn-success-hover: #059669;
+            --btn-warning: #f59e0b; --btn-warning-hover: #d97706;
+            --btn-info: #8b5cf6;    --btn-info-hover: #7c3aed;
+            --btn-secondary: #64748b; --btn-secondary-hover: #475569;
+
+            --row-hover: #f1f5f9;
+            --row-active: #e2e8f0;
+            --th-bg: #f4f4f5;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a; --text-color: #e2e8f0;
+            --header-bg: #1e293b; --border-color: #334155;
+            --btn-primary: #3b82f6; --btn-primary-hover: #60a5fa;
+            --btn-danger: #ef4444; --btn-danger-hover: #f87171;
+            --btn-warning: #d97706; --btn-warning-hover: #b45309;
+            --btn-info: #8b5cf6; --btn-info-hover: #a78bfa;
+            --row-hover: #1e293b; --row-active: #334155;
+            --th-bg: #1e293b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh; display: flex; flex-direction: column;
+            overflow: hidden; transition: all 0.3s;
+            font-size: 16px; 
+        }
+
+        /* HEADER & TOOLBAR */
+        header {
+            flex-shrink: 0; background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color); z-index: 100;
+        }
+
+        .top-bar {
+            padding: 10px 20px; display: flex;
+            justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .top-bar h1 { font-size: 1.3rem; margin: 0; text-transform: lowercase; }
+        
+        .font-controls {
+            display: flex; gap: 5px; align-items: center; font-weight: bold;
+        }
+        .font-controls button {
+            padding: 4px 10px; background: var(--border-color); color: var(--text-color);
+        }
+
+        .toolbar {
+            padding: 10px 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+
+        .divider {
+            width: 1px; height: 24px; background-color: var(--border-color); margin: 0 5px;
+        }
+
+        button {
+            padding: 7px 12px; border: none; border-radius: 6px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+            font-size: 0.85rem; display: flex; align-items: center; gap: 5px;
+        }
+
+        .btn-file { background-color: var(--btn-secondary); color: white; }
+        .btn-file:hover { background-color: var(--btn-secondary-hover); }
+        .btn-add { background-color: var(--btn-primary); color: white; }
+        .btn-add:hover { background-color: var(--btn-primary-hover); }
+        .btn-delete { background-color: var(--btn-danger); color: white; }
+        .btn-delete:hover { background-color: var(--btn-danger-hover); }
+        .btn-reset { background-color: var(--btn-warning); color: white; }
+        .btn-reset:hover { background-color: var(--btn-warning-hover); }
+        .btn-tool { background-color: var(--btn-info); color: white; }
+        .btn-tool:hover { background-color: var(--btn-info-hover); }
+        .btn-copy { background-color: var(--btn-success); color: white; }
+        .btn-copy:hover { background-color: var(--btn-success-hover); }
+
+        /* TABLE */
+        #table-container { flex-grow: 1; overflow: auto; position: relative; }
+        table { width: 100%; min-width: 1200px; table-layout: fixed; border-collapse: collapse; }
+        th {
+            position: sticky; top: 0; background-color: var(--th-bg);
+            border: 1px solid var(--border-color); border-top: none;
+            padding: 10px; font-weight: 600; width: 16.666%; /* Chia đều cho 6 cột */
+            z-index: 10;
+        }
+        td {
+            border: 1px solid var(--border-color); padding: 10px;
+            vertical-align: top; outline: none; white-space: pre-wrap; word-wrap: break-word;
+        }
+        tr:hover td { background-color: var(--row-hover); }
+        tr.active-row td { background-color: var(--row-active); }
+        td:focus { box-shadow: inset 0 0 0 2px var(--btn-primary); background-color: var(--bg-color) !important; }
+
+        /* TOAST */
+        #toast {
+            position: fixed; bottom: 30px; right: 30px; color: white;
+            padding: 12px 24px; border-radius: 8px; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0;
+            transform: translateY(20px); transition: 0.3s; pointer-events: none; z-index: 9999;
+        }
+        #toast.show { opacity: 1; transform: translateY(0); }
+
+        /* MODAL COMMON STYLE */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: var(--header-bg); padding: 20px; border-radius: 8px;
+            width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--border-color);
+        }
+        .modal-content h3 { margin-bottom: 15px; }
+        .modal-group { margin-bottom: 12px; }
+        .modal-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;}
+        .modal-group input, .modal-group select {
+            width: 100%; padding: 8px; border: 1px solid var(--border-color);
+            border-radius: 4px; background: var(--bg-color); color: var(--text-color);
+        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        /* REVISION HISTORY ITEM */
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid var(--border-color);
+            border-radius: 4px; transition: background 0.2s;
+        }
+        .history-item:hover { background-color: var(--row-hover); }
+    </style>
+    <script src="https://unpkg.com/pinyin-pro"></script>
+</head>
+<body>
+
+    <header>
+        <div class="top-bar">
+            <h1>📝 công cụ edit</h1>
+            <div class="font-controls">
+                <span>Cỡ chữ:</span>
+                <button id="btn-font-down">A-</button>
+                <button id="btn-font-up">A+</button>
+                <button class="btn-file" id="btn-theme" style="margin-left:15px;">🌙 Dark Mode</button>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn-file" id="btn-import" title="Mở file truyện đã lưu">📂 Mở file</button>
+            <input type="file" id="file-input" accept=".json" style="display:none">
+            <button class="btn-file" id="btn-export" title="Lưu truyện thành file vào máy">💾 Lưu file</button>
+            <button class="btn-reset" id="btn-reset" title="Xóa toàn bộ bảng">🔄 Làm mới</button>
+            
+            <div class="divider"></div>
+            
+            <button class="btn-add" id="btn-add">➕ Thêm hàng</button>
+            <button class="btn-delete" id="btn-delete">🗑️ Xóa hàng</button>
+            
+            <div class="divider"></div>
+            
+            <button class="btn-tool" id="btn-replace-show">🔍 Tìm & Thay thế</button>
+            <button class="btn-tool" id="btn-history-show" title="Xem lịch sử sửa đổi và khôi phục">📜 Lịch sử</button>
+            
+            <div class="divider"></div>
+            
+            <button class="btn-copy" id="btn-copy" style="margin-left: auto;">📋 Copy trọn bộ Edit</button>
+        </div>
+    </header>
+
+    <div id="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Raw (Giản thể)</th>
+                    <th>Pinyin</th>
+                    <th>Nghĩa của từ</th>
+                    <th>Bản dịch</th>
+                    <th>Bản QT</th>
+                    <th>Bản edit</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="toast"></div>
+
+    <!-- Modal Tìm và Thay thế -->
+    <div class="modal-overlay" id="modal-replace">
+        <div class="modal-content">
+            <h3>🔍 Tìm kiếm và Thay thế</h3>
+            <div class="modal-group">
+                <label>Tìm từ / Tên riêng:</label>
+                <input type="text" id="find-text" placeholder="Nhập từ cần tìm...">
+            </div>
+            <div class="modal-group">
+                <label>Thay thế bằng:</label>
+                <input type="text" id="replace-text" placeholder="Nhập từ mới...">
+            </div>
+            <div class="modal-group">
+                <label>Phạm vi (Cột):</label>
+                <select id="replace-column">
+                    <option value="all">-- Áp dụng cho Toàn bộ các cột --</option>
+                    <option value="translation">Cột: Bản dịch</option>
+                    <option value="qt">Cột: Bản QT</option>
+                    <option value="edit">Cột: Bản edit</option>
+                    <option value="meaning">Cột: Nghĩa của từ</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-file" id="btn-close-modal">Hủy</button>
+                <button class="btn-tool" id="btn-do-replace">✔️ Thay thế tất cả</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lịch sử sửa đổi -->
+    <div class="modal-overlay" id="modal-history">
+        <div class="modal-content" style="width: 500px; max-height: 85vh; display: flex; flex-direction: column;">
+            <h3>🕒 Lịch sử sửa đổi</h3>
+            <p style="font-size: 0.85rem; color: gray; margin-bottom: 12px;">
+                Bản sao lưu tự động được lưu trước khi thực hiện thay đổi lớn hoặc sau mỗi 15 giây gõ phím. Giới hạn tối đa 15 phiên bản gần nhất.
+            </p>
+            <div id="history-list" style="flex-grow: 1; overflow-y: auto; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; padding: 5px;"></div>
+            <div class="modal-actions" style="margin-top: 0;">
+                <button class="btn-file" id="btn-close-history">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { pinyin } = pinyinPro;
+        // Cập nhật mảng quản lý 6 cột
+        const columns = ['raw', 'pinyin', 'meaning', 'translation', 'qt', 'edit'];
+        const tbody = document.getElementById('table-body');
+        
+        let data = JSON.parse(localStorage.getItem('translationData')) || [createEmptyRow()];
+        let currentRowIndex = -1;
+        let lastHistoryTime = 0; 
+
+        let currentFontSize = parseInt(localStorage.getItem('appFontSize')) || 16;
+        document.body.style.fontSize = currentFontSize + 'px';
+
+        function createEmptyRow() {
+            // Cập nhật khởi tạo dữ liệu hàng trống có đủ 6 trường
+            return { raw: '', pinyin: '', meaning: '', translation: '', qt: '', edit: '' };
+        }
+
+        let saveTimeout;
+        function debounceSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('translationData', JSON.stringify(data));
+                const now = Date.now();
+                if (now - lastHistoryTime > 15000) { 
+                    addHistoryEntry();
+                    lastHistoryTime = now;
+                }
+            }, 500);
+        }
+
+        function showToast(message, bgColor = '#10b981') {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.backgroundColor = bgColor;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function appendRowToDOM(rowObj, index) {
+            const tr = document.createElement('tr');
+            columns.forEach(col => {
+                const td = document.createElement('td');
+                td.contentEditable = true;
+                td.innerText = rowObj[col] || ''; // Tránh lỗi undefined nếu tải dữ liệu cũ lên
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        }
+
+        function renderTable() {
+            tbody.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.contentEditable = true;
+                    td.innerText = row[col] || ''; 
+                    tr.appendChild(td);
+                });
+                fragment.appendChild(tr);
+            });
+            tbody.appendChild(fragment);
+        }
+
+        renderTable();
+
+        // ---------------- HÀM QUẢN LÝ LỊCH SỬ ----------------
+        function addHistoryEntry() {
+            let history = JSON.parse(localStorage.getItem('translationHistory')) || [];
+            const currentDataCopy = JSON.parse(JSON.stringify(data));
+            
+            if (history.length > 0) {
+                const lastEntry = history[history.length - 1];
+                if (JSON.stringify(lastEntry.data) === JSON.stringify(currentDataCopy)) return; 
+            }
+            history.push({ timestamp: Date.now(), rowCount: data.length, data: currentDataCopy });
+            if (history.length > 15) history.shift();
+            localStorage.setItem('translationHistory', JSON.stringify(history));
+        }
+
+        function renderHistoryList() {
+            const historyListDiv = document.getElementById('history-list');
+            const history = JSON.parse(localStorage.getItem('translationHistory')) || [];
+            if (history.length === 0) {
+                historyListDiv.innerHTML = '<p style="text-align:center; color:gray; padding: 20px 0;">Chưa có lịch sử.</p>';
+                return;
+            }
+            historyListDiv.innerHTML = '';
+            for (let i = history.length - 1; i >= 0; i--) {
+                const entry = history[i];
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleTimeString('vi-VN') + ' - ' + date.toLocaleDateString('vi-VN');
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                const info = document.createElement('div');
+                info.innerHTML = `<strong>${timeStr}</strong> <span style="font-size:0.8rem; color:gray;">(${entry.rowCount} hàng)</span>`;
+                const restoreBtn = document.createElement('button');
+                restoreBtn.className = 'btn-add';
+                restoreBtn.innerText = 'Khôi phục';
+                restoreBtn.style.padding = '4px 8px';
+                restoreBtn.onclick = () => {
+                    if (confirm(`Khôi phục lại phiên bản lúc ${timeStr}?`)) {
+                        addHistoryEntry();
+                        data = JSON.parse(JSON.stringify(entry.data));
+                        renderTable();
+                        localStorage.setItem('translationData', JSON.stringify(data));
+                        showToast('🕒 Khôi phục dữ liệu thành công!', 'var(--btn-success)');
+                        document.getElementById('modal-history').classList.remove('show');
+                    }
+                };
+                item.appendChild(info);
+                item.appendChild(restoreBtn);
+                historyListDiv.appendChild(item);
+            }
+        }
+
+        // ---------------- SỰ KIỆN DÁN (PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
+        tbody.addEventListener('paste', (e) => {
+            const targetCell = e.target.closest('td');
+            if (!targetCell) return;
+            
+            const clipboardText = (e.originalEvent || e).clipboardData.getData('text/plain');
+            if (!clipboardText) return;
+
+            const lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
+            if (lines.length === 1 && !lines[0].includes('\t')) return;
+
+            e.preventDefault(); 
+            addHistoryEntry(); 
+
+            const tr = targetCell.closest('tr');
+            let startRowIndex = Array.from(tbody.children).indexOf(tr);
+            const colIndex = Array.from(tr.children).indexOf(targetCell);
+
+            for (let i = 0; i < lines.length; i++) {
+                if (i === lines.length - 1 && lines[i].trim() === '') continue;
+
+                const textLine = lines[i];
+                const rowIndex = startRowIndex + i;
+                const cells = textLine.split('\t');
+
+                if (rowIndex >= data.length) {
+                    const newRow = createEmptyRow();
+                    data.push(newRow);
+                    appendRowToDOM(newRow, rowIndex);
+                }
+
+                let rawUpdated = false;
+                let pinyinUpdated = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    const targetColIdx = colIndex + j;
+                    if (targetColIdx >= 6) break; // Đã cập nhật chặn mức độ 6 cột
+
+                    const cellValue = cells[j];
+                    data[rowIndex][columns[targetColIdx]] = cellValue;
+                    tbody.children[rowIndex].children[targetColIdx].innerText = cellValue;
+
+                    if (targetColIdx === 0) rawUpdated = true;
+                    if (targetColIdx === 1 && cellValue.trim() !== '') pinyinUpdated = true;
+                }
+
+                // Tự động dịch Pinyin nếu chỉ paste Raw
+                if (rawUpdated && !pinyinUpdated) {
+                    const rawVal = data[rowIndex]['raw'];
+                    const pinyinText = pinyin(rawVal);
+                    data[rowIndex]['pinyin'] = pinyinText;
+                    tbody.children[rowIndex].children[1].innerText = pinyinText;
+                }
+            }
+            debounceSave();
+        });
+
+        // ---------------- NHẬP TAY VÀ CÁC NÚT ĐIỀU KHIỂN CHUNG ----------------
+        tbody.addEventListener('input', (e) => {
+            const targetCell = e.target.closest('td');
+            if (!targetCell) return;
+            const tr = targetCell.closest('tr');
+            const rowIndex = Array.from(tbody.children).indexOf(tr);
+            const colIndex = Array.from(tr.children).indexOf(targetCell);
+
+            const inputText = targetCell.innerText;
+            data[rowIndex][columns[colIndex]] = inputText;
+
+            // Tự động gen Pinyin khi nhập tay vào Raw
+            if (colIndex === 0) {
+                data[rowIndex]['pinyin'] = pinyin(inputText);
+                tr.children[1].innerText = data[rowIndex]['pinyin'];
+            }
+            debounceSave();
+        });
+
+        tbody.addEventListener('mousedown', (e) => {
+            const tr = e.target.closest('tr');
+            if (tr) {
+                const prev = tbody.querySelector('.active-row');
+                if (prev) prev.classList.remove('active-row');
+                tr.classList.add('active-row');
+                currentRowIndex = Array.from(tbody.children).indexOf(tr);
+            }
+        });
+
+        document.getElementById('btn-add').addEventListener('click', () => {
+            const newRow = createEmptyRow();
+            data.push(newRow);
+            appendRowToDOM(newRow, data.length - 1);
+            debounceSave();
+            const container = document.getElementById('table-container');
+            container.scrollTop = container.scrollHeight;
+        });
+
+        document.getElementById('btn-delete').addEventListener('click', () => {
+            if (currentRowIndex >= 0 && currentRowIndex < data.length) {
+                addHistoryEntry();
+                tbody.children[currentRowIndex].remove();
+                data.splice(currentRowIndex, 1);
+                if (data.length === 0) {
+                    const newRow = createEmptyRow();
+                    data.push(newRow);
+                    appendRowToDOM(newRow, 0);
+                }
+                currentRowIndex = -1;
+                debounceSave();
+            } else {
+                alert("Vui lòng nhấp vào một ô trong dòng bạn muốn xóa!");
+            }
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            if (confirm("⚠️ Bạn có chắc chắn muốn xóa TOÀN BỘ dữ liệu?")) {
+                addHistoryEntry();
+                data = [createEmptyRow()];
+                currentRowIndex = -1;
+                renderTable();
+                localStorage.setItem('translationData', JSON.stringify(data));
+                showToast('🔄 Đã làm mới toàn bộ bảng!', 'var(--btn-warning)');
+            }
+        });
+
+        document.getElementById('btn-copy').addEventListener('click', () => {
+            const hasContent = data.some(row => row.edit && row.edit.trim() !== "");
+            if (!hasContent) {
+                showToast('⚠️ Cột Bản edit đang trống!', 'var(--btn-warning)');
+                return;
+            }
+            // Sao chép cột cuối cùng (Bản edit)
+            const textToCopy = data.map(row => (row.edit || '').trim()).join('\r\n\r\n'); 
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast('✅ Đã sao chép chương dạng tiểu thuyết!', 'var(--btn-success)');
+            });
+        });
+
+        document.getElementById('btn-font-up').addEventListener('click', () => {
+            if(currentFontSize < 30) {
+                currentFontSize += 2;
+                document.body.style.fontSize = currentFontSize + 'px';
+                localStorage.setItem('appFontSize', currentFontSize);
+            }
+        });
+
+        document.getElementById('btn-font-down').addEventListener('click', () => {
+            if(currentFontSize > 12) {
+                currentFontSize -= 2;
+                document.body.style.fontSize = currentFontSize + 'px';
+                localStorage.setItem('appFontSize', currentFontSize);
+            }
+        });
+
+        document.getElementById('btn-export').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "chuong_truyen_" + new Date().getTime() + ".json");
+            dlAnchorElem.click();
+            showToast('💾 Đã tải file xuống máy!', 'var(--btn-success)');
+        });
+
+        const fileInput = document.getElementById('file-input');
+        document.getElementById('btn-import').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        addHistoryEntry();
+                        // Chèn thêm cột qt cho file cũ nếu thiếu
+                        data = importedData.map(row => {
+                            if(typeof row.qt === 'undefined') row.qt = '';
+                            return row;
+                        });
+                        renderTable();
+                        debounceSave();
+                        showToast('📂 Mở file thành công!', 'var(--btn-success)');
+                    } else alert("File không đúng định dạng!");
+                } catch (err) { alert("Lỗi đọc file: " + err); }
+            };
+            reader.readAsText(file);
+            fileInput.value = ''; 
+        });
+
+        const modalReplace = document.getElementById('modal-replace');
+        document.getElementById('btn-replace-show').addEventListener('click', () => {
+            modalReplace.classList.add('show');
+            document.getElementById('find-text').focus();
+        });
+        document.getElementById('btn-close-modal').addEventListener('click', () => modalReplace.classList.remove('show'));
+
+        document.getElementById('btn-do-replace').addEventListener('click', () => {
+            const findText = document.getElementById('find-text').value;
+            const replaceText = document.getElementById('replace-text').value;
+            const colTarget = document.getElementById('replace-column').value;
+            if(!findText) return alert("Vui lòng nhập từ cần tìm!");
+
+            addHistoryEntry();
+            let matchCount = 0;
+            const regex = new RegExp(findText, 'g');
+
+            data.forEach(row => {
+                if(colTarget === 'all') {
+                    columns.forEach(col => {
+                        if(row[col] && row[col].includes(findText)) {
+                            row[col] = row[col].replace(regex, replaceText);
+                            matchCount++;
+                        }
+                    });
+                } else {
+                    if(row[colTarget] && row[colTarget].includes(findText)) {
+                        row[colTarget] = row[colTarget].replace(regex, replaceText);
+                        matchCount++;
+                    }
+                }
+            });
+
+            if(matchCount > 0) {
+                renderTable();
+                debounceSave();
+                showToast(`✔️ Đã thay thế thành công ở ${matchCount} vị trí!`, 'var(--btn-info)');
+            } else {
+                showToast(`❌ Không tìm thấy từ "${findText}"`, 'var(--btn-danger)');
+            }
+            modalReplace.classList.remove('show');
+        });
+
+        const modalHistory = document.getElementById('modal-history');
+        document.getElementById('btn-history-show').addEventListener('click', () => {
+            renderHistoryList();
+            modalHistory.classList.add('show');
+        });
+        document.getElementById('btn-close-history').addEventListener('click', () => modalHistory.classList.remove('show'));
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modalReplace) modalReplace.classList.remove('show');
+            if (e.target === modalHistory) modalHistory.classList.remove('show');
+        });
+
+        const btnTheme = document.getElementById('btn-theme');
+        let isDark = localStorage.getItem('darkMode') === 'true';
+        function applyTheme() {
+            if (isDark) {
+                document.body.setAttribute('data-theme', 'dark');
+                btnTheme.innerHTML = '☀️ Light Mode';
+            } else {
+                document.body.removeAttribute('data-theme');
+                btnTheme.innerHTML = '🌙 Dark Mode';
+            }
+        }
+        applyTheme();
+        btnTheme.addEventListener('click', () => {
+            isDark = !isDark;
+            localStorage.setItem('darkMode', isDark);
+            applyTheme();
+        });
+    </script>
+</body>
+</html>
