@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Lexend:wght@300;400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* CSS Variables */
+        /* CSS Variables mặc định */
         :root {
             --bg-color: #f8fafc;
             --text-color: #334155;
@@ -24,8 +24,10 @@
             --btn-info: #8b5cf6;    --btn-info-hover: #7c3aed;
             --btn-secondary: #64748b; --btn-secondary-hover: #475569;
 
+            /* Các biến màu sẽ được thay đổi động bằng JS */
             --row-hover: rgba(0, 0, 0, 0.03);
-            --row-active: rgba(239, 68, 68, 0.15); /* Chuyển sang màu đỏ nhạt khi bôi đỏ quét chọn hàng */
+            --row-active: #cbd5e1; 
+            --selection-bg: #cbd5e1;
             --th-bg: #f4f4f5;
         }
 
@@ -37,7 +39,6 @@
             --btn-warning: #d97706; --btn-warning-hover: #b45309;
             --btn-info: #8b5cf6; --btn-info-hover: #a78bfa;
             --row-hover: rgba(255, 255, 255, 0.05); 
-            --row-active: rgba(239, 68, 68, 0.25);
             --th-bg: #1e293b;
         }
 
@@ -49,6 +50,16 @@
             height: 100vh; display: flex; flex-direction: column;
             overflow: hidden; transition: background-color 0.3s, color 0.3s;
             font-size: 16px; 
+        }
+
+        /* Áp dụng màu bôi đen quét chọn văn bản động theo từng Theme bảo vệ mắt */
+        ::selection {
+            background-color: var(--selection-bg);
+            color: var(--text-color);
+        }
+        ::-moz-selection {
+            background-color: var(--selection-bg);
+            color: var(--text-color);
         }
 
         /* Khóa bôi đen chữ mặc định khi đang trong chế độ kéo quét chọn nhiều hàng */
@@ -301,14 +312,15 @@
         let lastHistoryTime = 0; 
 
         // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
+        // Bổ sung các biến "active" (đậm hơn cho nền sáng) và "hover" mềm cho từng theme
         const themes = {
-            light: { bg: '#f8fafc', text: '#334155' },
-            sepia: { bg: '#f5eedc', text: '#4a3622' },
-            sage: { bg: '#e3ede3', text: '#1e301e' },
-            dreamy: { bg: '#faf0f5', text: '#522d42' },
-            dark: { bg: '#1e293b', text: '#cbd5e1' },
-            night: { bg: '#0d1b2a', text: '#e0e1dd' },
-            oled: { bg: '#000000', text: '#e2e8f0' }
+            light: { bg: '#f8fafc', text: '#334155', active: '#cbd5e1', hover: 'rgba(0,0,0,0.03)' },
+            sepia: { bg: '#f5eedc', text: '#4a3622', active: '#d6c5a3', hover: '#ebdcb9' },
+            sage:  { bg: '#e3ede3', text: '#1e301e', active: '#b8ccb8', hover: '#d1dfd1' },
+            dreamy:{ bg: '#faf0f5', text: '#522d42', active: '#e8c1db', hover: '#f3d9ea' },
+            dark:  { bg: '#1e293b', text: '#cbd5e1', active: '#334155', hover: '#24304a' },
+            night: { bg: '#0d1b2a', text: '#e0e1dd', active: '#1b2d42', hover: '#12253b' },
+            oled:  { bg: '#000000', text: '#e2e8f0', active: '#2d2d30', hover: '#161618' }
         };
 
         // === 1. ĐIỀU KHIỂN CỠ CHỮ & FONT CHỮ CUTE ===
@@ -332,9 +344,12 @@
         function applyTheme(themeKey) {
             const selected = themes[themeKey] || themes.light;
             
-            // Ép biến màu CSS trên toàn trang web
+            // Ép biến màu CSS trên toàn trang web (Dùng cho cả hình nền và chữ bôi đen)
             document.documentElement.style.setProperty('--bg-color', selected.bg);
             document.documentElement.style.setProperty('--text-color', selected.text);
+            document.documentElement.style.setProperty('--row-active', selected.active);
+            document.documentElement.style.setProperty('--row-hover', selected.hover);
+            document.documentElement.style.setProperty('--selection-bg', selected.active); // Tạo độ sâu bôi đen động
             
             // Điều chỉnh lớp bóng/đường viền phù hợp (Bật data-theme tối để các modal không bị lóa)
             const isDarkTheme = ['dark', 'night', 'oled'].includes(themeKey);
@@ -461,76 +476,36 @@
             }
         }
 
-        // ---------------- ĐIỀU KHIỂN CỬ CHỈ QUÉT CHỌN HÀNG LOẠT (CTRL + SHIFT + DRAG) ----------------
-
-        // 1. Nhấp đơn bình thường (khi bạn sửa chữ)
-        tbody.addEventListener('focusin', (e) => {
-            if (isDragSelecting) return; // Nếu đang quét chọn hàng loạt thì ko kích hoạt nhấp đơn
-            const tr = e.target.closest('tr');
-            if (tr) {
-                tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
-                tr.classList.add('active-row');
-                currentRowIndex = Array.from(tbody.children).indexOf(tr);
-                selectedRowIndices = [currentRowIndex]; // Mặc định chọn 1 hàng này
-            }
-        });
-
-        // 2. Click chuột xuống (Mousedown)
-        tbody.addEventListener('mousedown', (e) => {
-            const tr = e.target.closest('tr');
-            if (!tr) return;
-
-            // Kiểm tra xem bạn có đang giữ Ctrl + Shift không
-            if (e.ctrlKey && e.shiftKey) {
-                e.preventDefault(); // Ngăn trình duyệt nhảy con trỏ gõ phím vào ô
-                document.body.classList.add('selecting-rows'); // Tắt tính năng bôi đen chữ của trình duyệt
-                
-                isDragSelecting = true;
-                dragStartRowIdx = Array.from(tbody.children).indexOf(tr);
-                
-                // Reset lại vùng màu chọn cũ
-                tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
-                
-                tr.classList.add('active-row');
-                selectedRowIndices = [dragStartRowIdx];
-                currentRowIndex = dragStartRowIdx;
-            }
-        });
-
-        // 3. Rê chuột quét qua các hàng khác (Mouseover)
-        tbody.addEventListener('mouseover', (e) => {
-            if (!isDragSelecting) return;
-            const tr = e.target.closest('tr');
-            if (!tr) return;
-
-            const currentIdx = Array.from(tbody.children).indexOf(tr);
-            if (currentIdx === -1) return;
-
-            // Xóa sạch vùng màu chọn nháp cũ
-            tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
+        // ---------------- THUẬT TOÁN TÍNH TOÁN CÁC HÀNG ĐANG ĐƯỢC BÔI ĐEN ----------------
+        function getSelectedRows() {
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed || selection.rangeCount === 0) return [];
             
-            // Tính toán khoảng quét từ hàng bắt đầu kéo đến hàng đang rê chuột qua
-            const min = Math.min(dragStartRowIdx, currentIdx);
-            const max = Math.max(dragStartRowIdx, currentIdx);
+            const trs = Array.from(tbody.children);
+            const selectedTrs = [];
             
-            selectedRowIndices = [];
-            for (let i = min; i <= max; i++) {
-                if (tbody.children[i]) {
-                    tbody.children[i].classList.add('active-row');
-                    selectedRowIndices.push(i);
+            trs.forEach(tr => {
+                // Kiểm tra xem trình duyệt có đang bôi đen bất cứ thành phần nào của TR này ko
+                if (selection.containsNode(tr, true)) {
+                    selectedTrs.push(tr);
                 }
-            }
-        });
+            });
+            return selectedTrs;
+        }
 
-        // 4. Thả chuột ở bất kỳ đâu trên màn hình (Mouseup)
-        document.addEventListener('mouseup', () => {
-            if (isDragSelecting) {
-                isDragSelecting = false;
-                dragStartRowIdx = -1;
-                document.body.classList.remove('selecting-rows'); // Mở lại bôi đen chữ mặc định
-            }
+        // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
+        document.getElementById('table-container').addEventListener('mouseup', () => {
+            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen và không ảnh hưởng bôi đen chữ
+                const selectedRows = getSelectedRows();
+                if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
+                    tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
+                    selectedRowIndices = selectedRows.map(tr => Array.from(tbody.children).indexOf(tr));
+                    selectedRowIndices.forEach(idx => {
+                        if (tbody.children[idx]) tbody.children[idx].classList.add('active-row');
+                    });
+                }
+            }, 10);
         });
-
 
         // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
         tbody.addEventListener('paste', (e) => {
@@ -613,6 +588,74 @@
                 tr.children[1].innerText = data[rowIndex]['pinyin'];
             }
             debounceSave();
+        });
+
+        // Đổi mousedown sang focusin để KHÔNG BỊ LỖI hủy bôi đen chữ của trình duyệt
+        tbody.addEventListener('focusin', (e) => {
+            if (isDragSelecting) return; // Nếu đang quét chọn hàng loạt thì ko kích hoạt nhấp đơn
+            const tr = e.target.closest('tr');
+            if (tr) {
+                tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
+                tr.classList.add('active-row');
+                currentRowIndex = Array.from(tbody.children).indexOf(tr);
+                selectedRowIndices = [currentRowIndex]; // Mặc định chọn 1 hàng này
+            }
+        });
+
+        // 2. Click chuột xuống (Mousedown)
+        tbody.addEventListener('mousedown', (e) => {
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+
+            // Kiểm tra xem bạn có đang giữ Ctrl + Shift không
+            if (e.ctrlKey && e.shiftKey) {
+                e.preventDefault(); // Ngăn trình duyệt nhảy con trỏ gõ phím vào ô
+                document.body.classList.add('selecting-rows'); // Tắt tính năng bôi đen chữ của trình duyệt
+                
+                isDragSelecting = true;
+                dragStartRowIdx = Array.from(tbody.children).indexOf(tr);
+                
+                // Reset lại vùng màu chọn cũ
+                tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
+                
+                tr.classList.add('active-row');
+                selectedRowIndices = [dragStartRowIdx];
+                currentRowIndex = dragStartRowIdx;
+            }
+        });
+
+        // 3. Rê chuột quét qua các hàng khác (Mouseover)
+        tbody.addEventListener('mouseover', (e) => {
+            if (!isDragSelecting) return;
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+
+            const currentIdx = Array.from(tbody.children).indexOf(tr);
+            if (currentIdx === -1) return;
+
+            // Xóa sạch vùng màu chọn nháp cũ
+            tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
+            
+            // Tính toán khoảng quét từ hàng bắt đầu kéo đến hàng đang rê chuột qua
+            const min = Math.min(dragStartRowIdx, currentIdx);
+            const max = Math.max(dragStartRowIdx, currentIdx);
+            
+            selectedRowIndices = [];
+            for (let i = min; i <= max; i++) {
+                if (tbody.children[i]) {
+                    tbody.children[i].classList.add('active-row');
+                    selectedRowIndices.push(i);
+                }
+            }
+        });
+
+        // 4. Thả chuột ở bất kỳ đâu trên màn hình (Mouseup)
+        document.addEventListener('mouseup', () => {
+            if (isDragSelecting) {
+                isDragSelecting = false;
+                dragStartRowIdx = -1;
+                document.body.classList.remove('selecting-rows'); // Mở lại bôi đen chữ mặc định
+            }
         });
 
         document.getElementById('btn-add').addEventListener('click', () => {
