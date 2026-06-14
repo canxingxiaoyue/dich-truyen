@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>công cụ edit</title>
+    <!-- Nhập các Font chữ cute & dễ đọc trực tiếp từ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Lexend:wght@300;400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         /* CSS Variables */
         :root {
@@ -19,26 +24,26 @@
             --btn-info: #8b5cf6;    --btn-info-hover: #7c3aed;
             --btn-secondary: #64748b; --btn-secondary-hover: #475569;
 
-            --row-hover: #f1f5f9;
-            --row-active: #e2e8f0;
+            --row-hover: rgba(0, 0, 0, 0.03);
+            --row-active: rgba(0, 0, 0, 0.06);
             --th-bg: #f4f4f5;
         }
 
         [data-theme="dark"] {
-            --bg-color: #0f172a; --text-color: #e2e8f0;
-            --header-bg: #1e293b; --border-color: #334155;
+            --header-bg: #1e293b; 
+            --border-color: #334155;
             --btn-primary: #3b82f6; --btn-primary-hover: #60a5fa;
             --btn-danger: #ef4444; --btn-danger-hover: #f87171;
             --btn-warning: #d97706; --btn-warning-hover: #b45309;
             --btn-info: #8b5cf6; --btn-info-hover: #a78bfa;
-            --row-hover: #1e293b; --row-active: #334155;
+            --row-hover: rgba(255, 255, 255, 0.05); 
+            --row-active: rgba(255, 255, 255, 0.1);
             --th-bg: #1e293b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh; display: flex; flex-direction: column;
@@ -67,16 +72,11 @@
             padding: 4px 10px; background: var(--border-color); color: var(--text-color); border: none; border-radius: 4px; cursor: pointer;
         }
 
-        /* Phụ trợ CSS cho chọn Font và Màu */
+        /* Lựa chọn Font và Combo màu */
         .font-select {
-            margin-left: 10px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); 
-            background: var(--bg-color); color: var(--text-color); outline: none; font-size: 0.9rem; font-family: inherit;
-        }
-        .color-picker-wrapper {
-            display: flex; align-items: center; gap: 5px; margin-left: 10px; font-weight: 600; font-size: 0.9rem;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent;
+            margin-left: 10px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-color); 
+            background: var(--header-bg); color: var(--text-color); outline: none; font-size: 0.9rem; font-family: inherit;
+            cursor: pointer; font-weight: 600;
         }
 
         .toolbar {
@@ -146,7 +146,7 @@
         .modal-content h3 { margin-bottom: 15px; }
         .modal-group { margin-bottom: 12px; }
         .modal-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;}
-        .modal-group input[type="text"], .modal-group select {
+        .modal-group input, .modal-group select {
             width: 100%; padding: 8px; border: 1px solid var(--border-color);
             border-radius: 4px; background: var(--bg-color); color: var(--text-color);
         }
@@ -168,31 +168,30 @@
         <div class="top-bar">
             <h1>📝 công cụ edit</h1>
             <div class="font-controls">
-                <span title="Chỉnh cỡ chữ">Cỡ:</span>
+                <span title="Chỉnh cỡ chữ">Cỡ chữ:</span>
                 <button id="btn-font-down">A-</button>
                 <button id="btn-font-up">A+</button>
 
+                <!-- Lựa chọn Font Chữ -->
                 <select id="font-family" class="font-select" title="Chọn Font chữ">
-                    <option value="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Segoe UI (Mặc định)</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="Arial, Helvetica, sans-serif">Arial</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
+                    <option value="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Mặc định (Segoe UI)</option>
+                    <option value="'Quicksand', sans-serif">Quicksand (Tròn dịu, Cute)</option>
+                    <option value="'Comfortaa', sans-serif">Comfortaa (Bo tròn xoe, Siêu dễ thương)</option>
+                    <option value="'Lexend', sans-serif">Lexend (Mềm mại, Rất dễ đọc)</option>
+                    <option value="Georgia, serif">Georgia (Cổ điển, Kiểu tiểu thuyết)</option>
+                    <option value="Tahoma, Geneva, sans-serif">Tahoma (Trang nhã)</option>
                 </select>
 
-                <div class="color-picker-wrapper">
-                    <label title="Đổi màu nền toàn bộ trang">Nền:</label>
-                    <input type="color" id="bg-color-picker" title="Chọn màu nền">
-                </div>
-                
-                <div class="color-picker-wrapper" style="margin-left: 5px;">
-                    <label title="Đổi màu chữ">Chữ:</label>
-                    <input type="color" id="text-color-picker" title="Chọn màu chữ">
-                </div>
-
-                <button class="btn-file" id="btn-theme" style="margin-left:15px;" title="Bấm để chuyển Sáng/Tối và khôi phục màu sắc gốc">🌙 Dark Mode</button>
+                <!-- Lựa chọn Combo Màu sắc -->
+                <select id="theme-select" class="font-select" title="Chọn giao diện màu">
+                    <option value="light">☀️ Sáng sữa</option>
+                    <option value="sepia">🍂 Giấy ấm (Sepia)</option>
+                    <option value="sage">🍃 Xanh lục dịu (Bảo vệ mắt)</option>
+                    <option value="dreamy">🌸 Hồng tím pastel (Mộng mơ)</option>
+                    <option value="dark">🌙 Tối xám dịu</option>
+                    <option value="night">🌌 Đêm biển thẳm</option>
+                    <option value="oled">🖤 OLED Đen tuyền</option>
+                </select>
             </div>
         </div>
         
@@ -281,7 +280,6 @@
 
     <script>
         const { pinyin } = pinyinPro;
-        // Quản lý 6 cột
         const columns = ['raw', 'pinyin', 'meaning', 'translation', 'qt', 'edit'];
         const tbody = document.getElementById('table-body');
         
@@ -289,7 +287,18 @@
         let currentRowIndex = -1;
         let lastHistoryTime = 0; 
 
-        // === 1. TẢI FONT CHỮ VÀ CỠ CHỮ ===
+        // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
+        const themes = {
+            light: { bg: '#f8fafc', text: '#334155' },
+            sepia: { bg: '#f5eedc', text: '#4a3622' },
+            sage: { bg: '#e3ede3', text: '#1e301e' },
+            dreamy: { bg: '#faf0f5', text: '#522d42' },
+            dark: { bg: '#1e293b', text: '#cbd5e1' },
+            night: { bg: '#0d1b2a', text: '#e0e1dd' },
+            oled: { bg: '#000000', text: '#e2e8f0' }
+        };
+
+        // === 1. ĐIỀU KHIỂN CỠ CHỮ & FONT CHỮ CUTE ===
         let currentFontSize = parseInt(localStorage.getItem('appFontSize')) || 16;
         document.body.style.fontSize = currentFontSize + 'px';
 
@@ -303,69 +312,38 @@
             localStorage.setItem('appFontFamily', e.target.value);
         });
 
-        // === 2. TẢI MÀU NỀN & MÀU CHỮ & THEME ===
-        const bgColorPicker = document.getElementById('bg-color-picker');
-        const textColorPicker = document.getElementById('text-color-picker');
-        const btnTheme = document.getElementById('btn-theme');
-        let isDark = localStorage.getItem('darkMode') === 'true';
+        // === 2. ĐIỀU KHIỂN THEME COMBO MÀU CỐ ĐỊNH ===
+        const themeSelector = document.getElementById('theme-select');
+        const savedTheme = localStorage.getItem('appTheme') || 'light';
 
-        function applyTheme() {
-            // Thiết lập Mode gốc (Sáng hoặc Tối)
-            if (isDark) {
+        function applyTheme(themeKey) {
+            const selected = themes[themeKey] || themes.light;
+            
+            // Ép biến màu CSS trên toàn trang web
+            document.documentElement.style.setProperty('--bg-color', selected.bg);
+            document.documentElement.style.setProperty('--text-color', selected.text);
+            
+            // Điều chỉnh lớp bóng/đường viền phù hợp (Bật data-theme tối để các modal không bị lóa)
+            const isDarkTheme = ['dark', 'night', 'oled'].includes(themeKey);
+            if (isDarkTheme) {
                 document.body.setAttribute('data-theme', 'dark');
-                btnTheme.innerHTML = '☀️ Light Mode';
             } else {
                 document.body.removeAttribute('data-theme');
-                btnTheme.innerHTML = '🌙 Dark Mode';
             }
-
-            // Ghi đè bằng Màu tùy chỉnh nếu người dùng có set
-            const customBg = localStorage.getItem('customBgColor');
-            const customText = localStorage.getItem('customTextColor');
-
-            if (customBg) {
-                document.documentElement.style.setProperty('--bg-color', customBg);
-                bgColorPicker.value = customBg;
-            } else {
-                document.documentElement.style.removeProperty('--bg-color');
-                bgColorPicker.value = isDark ? '#0f172a' : '#f8fafc';
-            }
-
-            if (customText) {
-                document.documentElement.style.setProperty('--text-color', customText);
-                textColorPicker.value = customText;
-            } else {
-                document.documentElement.style.removeProperty('--text-color');
-                textColorPicker.value = isDark ? '#e2e8f0' : '#334155';
-            }
+            
+            themeSelector.value = themeKey;
+            localStorage.setItem('appTheme', themeKey);
         }
-        applyTheme();
 
-        // Lắng nghe sự kiện người dùng chọn màu mới
-        bgColorPicker.addEventListener('input', (e) => {
-            document.documentElement.style.setProperty('--bg-color', e.target.value);
-            localStorage.setItem('customBgColor', e.target.value);
+        themeSelector.addEventListener('change', (e) => {
+            applyTheme(e.target.value);
         });
 
-        textColorPicker.addEventListener('input', (e) => {
-            document.documentElement.style.setProperty('--text-color', e.target.value);
-            localStorage.setItem('customTextColor', e.target.value);
-        });
-
-        // Bấm nút Theme sẽ "Dọn sạch" màu custom để khôi phục mặc định chuẩn
-        btnTheme.addEventListener('click', () => {
-            isDark = !isDark;
-            localStorage.setItem('darkMode', isDark);
-            
-            // Xóa màu tự pha để tránh bị kẹt màu lỗi
-            localStorage.removeItem('customBgColor');
-            localStorage.removeItem('customTextColor');
-            
-            applyTheme();
-        });
+        // Khởi chạy nạp màu lúc ban đầu
+        applyTheme(savedTheme);
 
 
-        // === CÁC CHỨC NĂNG BẢNG & LƯU TRỮ ===
+        // === CÁC CHỨC NĂNG CHUNG CỦA TRANG WEB ===
         function createEmptyRow() {
             return { raw: '', pinyin: '', meaning: '', translation: '', qt: '', edit: '' };
         }
@@ -470,7 +448,7 @@
             }
         }
 
-        // ---------------- SỰ KIỆN DÁN (SUPER PASTE) BẤT TỬ KÝ TỰ TÀNG HÌNH ----------------
+        // ---------------- SỰ KIỆN DÁN (SUPER PASTE) CHIA CỘT VÀ CHIA DÒNG ----------------
         tbody.addEventListener('paste', (e) => {
             const targetCell = e.target.closest('td');
             if (!targetCell) return;
@@ -478,10 +456,16 @@
             const clipboardText = (e.originalEvent || e).clipboardData.getData('text/plain');
             if (!clipboardText) return;
 
+            // Tách dòng
             let lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
+            
+            // SUPER PASTE: Lột sạch khoảng trắng thừa, KÝ TỰ ẨN (Zero-width space) và XÓA CÁC DÒNG TRỐNG
             lines = lines.map(line => line.replace(/[\u200B-\u200F\uFEFF\u202A-\u202E]/g, '').trim());
+            
+            // Xóa sổ hoàn toàn các dòng rỗng
             lines = lines.filter(line => line !== '');
 
+            // Nếu chỉ copy đúng 1 từ/1 câu ngắn không có cột, để trình duyệt dán như bình thường
             if (lines.length <= 1 && !clipboardText.includes('\t')) return;
 
             e.preventDefault(); 
@@ -507,7 +491,7 @@
 
                 for (let j = 0; j < cells.length; j++) {
                     const targetColIdx = colIndex + j;
-                    if (targetColIdx >= 6) break; // Cập nhật vòng lặp 6 cột
+                    if (targetColIdx >= 6) break; // Giới hạn 6 cột
 
                     const cellValue = cells[j];
                     data[rowIndex][columns[targetColIdx]] = cellValue;
@@ -517,6 +501,7 @@
                     if (targetColIdx === 1 && cellValue.trim() !== '') pinyinUpdated = true;
                 }
 
+                // Tự động dịch Pinyin nếu chỉ dán cột Raw
                 if (rawUpdated && !pinyinUpdated) {
                     const rawVal = data[rowIndex]['raw'];
                     const pinyinText = pinyin(rawVal);
@@ -538,6 +523,7 @@
             const inputText = targetCell.innerText;
             data[rowIndex][columns[colIndex]] = inputText;
 
+            // Tự động gen Pinyin khi nhập tay vào Raw
             if (colIndex === 0) {
                 data[rowIndex]['pinyin'] = pinyin(inputText);
                 tr.children[1].innerText = data[rowIndex]['pinyin'];
