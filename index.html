@@ -24,7 +24,6 @@
             --btn-info: #8b5cf6;    --btn-info-hover: #7c3aed;
             --btn-secondary: #64748b; --btn-secondary-hover: #475569;
 
-            /* Các biến màu sẽ được thay đổi động bằng JS */
             --row-hover: rgba(0, 0, 0, 0.03);
             --row-active: #cbd5e1; 
             --selection-bg: #cbd5e1;
@@ -99,6 +98,39 @@
 
         .toolbar {
             padding: 10px 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* THANH CÔNG CỤ ĐỊNH DẠNG KIỂU MICROSOFT WORD */
+        .format-toolbar {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 5px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+        .format-btn {
+            background: transparent;
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            font-weight: 600;
+        }
+        .format-btn:hover {
+            background-color: var(--row-hover);
+            border-color: var(--border-color);
+        }
+        .format-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .divider {
@@ -164,9 +196,10 @@
         .modal-content h3 { margin-bottom: 15px; }
         .modal-group { margin-bottom: 12px; }
         .modal-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;}
-        .modal-group input, .modal-group select {
+        .modal-group input[type="text"], .modal-group select {
             width: 100%; padding: 8px; border: 1px solid var(--border-color);
             border-radius: 4px; background: var(--bg-color); color: var(--text-color);
+            outline: none;
         }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
@@ -233,6 +266,79 @@
             
             <button class="btn-copy" id="btn-copy" style="margin-left: auto;">📋 Copy trọn bộ Edit</button>
         </div>
+
+        <!-- WORD RIBBON: THANH ĐỊNH DẠNG CHI TIẾT -->
+        <div class="format-toolbar">
+            <!-- Undo / Redo Group -->
+            <button class="format-btn" id="btn-undo" title="Hoàn tác (Ctrl+Z)" disabled>↩️ Undo</button>
+            <button class="format-btn" id="btn-redo" title="Làm lại (Ctrl+Y)" disabled>🔁 Redo</button>
+            <div class="divider"></div>
+
+            <!-- Font & Size Group -->
+            <select id="ribbon-font" class="format-select" title="Font chữ">
+                <option value="'Segoe UI', Roboto, sans-serif">Segoe UI</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="Arial, Helvetica, sans-serif">Arial</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+                <option value="'Quicksand', sans-serif">Quicksand (Cute)</option>
+                <option value="'Comfortaa', sans-serif">Comfortaa (Cute)</option>
+                <option value="'Lexend', sans-serif">Lexend (Mềm mại)</option>
+            </select>
+            <select id="ribbon-size" class="format-select" title="Cỡ chữ văn bản">
+                <option value="3">Mặc định</option>
+                <option value="1">Siêu nhỏ</option>
+                <option value="2">Nhỏ</option>
+                <option value="4">Vừa</option>
+                <option value="5">Lớn</option>
+                <option value="6">Rất lớn</option>
+                <option value="7">Cực đại</option>
+            </select>
+            <div class="divider"></div>
+
+            <!-- Kiểu dáng -->
+            <button class="format-btn" id="btn-bold" title="In đậm (Ctrl+B)"><b>B</b></button>
+            <button class="format-btn" id="btn-italic" title="In nghiêng (Ctrl+I)"><i>I</i></button>
+            <button class="format-btn" id="btn-underline" title="Gạch chân (Ctrl+U)"><u>U</u></button>
+            <button class="format-btn" id="btn-strike" title="Gạch đè"><s>S</s></button>
+            <button class="format-btn" id="btn-sub" title="Chỉ số dưới">x₂</button>
+            <button class="format-btn" id="btn-sup" title="Chỉ số trên">x²</button>
+            <div class="divider"></div>
+
+            <!-- Màu sắc -->
+            <span style="font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 3px;">
+                🎨 Chữ: <input type="color" id="ribbon-forecolor" value="#334155" style="width:22px; height:22px; border:none; border-radius:3px; cursor:pointer;" title="Chọn màu chữ">
+            </span>
+            <span style="font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 3px; margin-left: 5px;">
+                🖌️ Nền: <input type="color" id="ribbon-hilitecolor" value="#fde047" style="width:22px; height:22px; border:none; border-radius:3px; cursor:pointer;" title="Chọn màu tô sáng">
+            </span>
+            <div class="divider"></div>
+
+            <!-- Đổi kiểu chữ (Case) & Toàn bán giác -->
+            <select id="ribbon-case" class="format-select" title="Đổi kiểu chữ / Toàn bán giác">
+                <option value="">-- Kiểu chữ / Chiều rộng --</option>
+                <option value="sentence">Sentence case (Hoa đầu câu)</option>
+                <option value="lowercase">lowercase (viết thường)</option>
+                <option value="uppercase">UPPERCASE (VIẾT HOA)</option>
+                <option value="capitalize">Capitalize Each Word (Mỗi Từ)</option>
+                <option value="toggle">tOGGLE cASE (Đảo ngược)</option>
+                <option value="half">Half-width (Chuyển sang bán giác)</option>
+                <option value="full">Full-width (Chuyển sang toàn giác)</option>
+            </select>
+            <div class="divider"></div>
+
+            <!-- Căn lề & List -->
+            <button class="format-btn" id="btn-align-left" title="Căn lề trái">⬅️ Lề Trái</button>
+            <button class="format-btn" id="btn-align-center" title="Căn giữa">↔️ Căn Giữa</button>
+            <button class="format-btn" id="btn-align-right" title="Căn phải">➡️ Lề Phải</button>
+            <button class="format-btn" id="btn-align-justify" title="Căn đều 2 bên">↔️ Căn Đều</button>
+            <button class="format-btn" id="btn-list-bullet" title="Danh sách ký hiệu">• List</button>
+            <button class="format-btn" id="btn-list-num" title="Danh sách số">1. List</button>
+            <div class="divider"></div>
+
+            <!-- Clear formatting -->
+            <button class="format-btn" id="btn-clear-format" title="Xóa định dạng đang chọn" style="color: var(--btn-danger); font-weight: bold;">🧹 Xóa Định Dạng</button>
+        </div>
     </header>
 
     <div id="table-container">
@@ -253,31 +359,64 @@
 
     <div id="toast"></div>
 
-    <!-- Modal Tìm và Thay thế -->
+    <!-- Modal Tìm và Thay thế (Nâng cấp hệ thống MS Word) -->
     <div class="modal-overlay" id="modal-replace">
-        <div class="modal-content">
-            <h3>🔍 Tìm kiếm và Thay thế</h3>
-            <div class="modal-group">
-                <label>Tìm từ / Tên riêng:</label>
-                <input type="text" id="find-text" placeholder="Nhập từ cần tìm...">
+        <div class="modal-content" style="width: 500px; max-height: 90vh; display: flex; flex-direction: column;">
+            <h3>🔍 Tìm kiếm & Thay thế Nâng cao</h3>
+            
+            <div style="flex-grow: 1; overflow-y: auto; padding-right: 5px;">
+                <div class="modal-group">
+                    <label>Tìm từ / Cụm từ:</label>
+                    <input type="text" id="find-text" placeholder="Nhập từ cần tìm...">
+                </div>
+                <div class="modal-group">
+                    <label>Thay thế bằng:</label>
+                    <input type="text" id="replace-text" placeholder="Nhập từ mới...">
+                </div>
+                <div class="modal-group">
+                    <label>Phạm vi (Cột):</label>
+                    <select id="replace-column">
+                        <option value="all">-- Áp dụng cho Toàn bộ các cột --</option>
+                        <option value="translation">Cột: Bản dịch</option>
+                        <option value="qt">Cột: Bản QT</option>
+                        <option value="edit">Cột: Bản edit</option>
+                        <option value="meaning">Cột: Nghĩa của từ</option>
+                    </select>
+                </div>
+                
+                <h4 style="margin: 15px 0 8px 0; font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; font-weight: bold;">Tùy chọn nâng cao</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-match-case"> Match Case (Phân biệt chữ hoa/thường)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-whole-word"> Whole Word Only (Chỉ khớp nguyên từ Unicode)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-regex"> Sử dụng biểu thức chính quy (Regex)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-ignore-punc"> Bỏ qua dấu câu khi tìm kiếm
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-ignore-space"> Bỏ qua khoảng trắng khi tìm kiếm
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-case-preserve"> Giữ nguyên kiểu chữ (lumian ➔ klein, Lumian ➔ Klein...)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="opt-search-selection"> Chỉ tìm trong vùng đang chọn (Các hàng tô đỏ)
+                    </label>
+                </div>
             </div>
-            <div class="modal-group">
-                <label>Thay thế bằng:</label>
-                <input type="text" id="replace-text" placeholder="Nhập từ mới...">
-            </div>
-            <div class="modal-group">
-                <label>Phạm vi (Cột):</label>
-                <select id="replace-column">
-                    <option value="all">-- Áp dụng cho Toàn bộ các cột --</option>
-                    <option value="translation">Cột: Bản dịch</option>
-                    <option value="qt">Cột: Bản QT</option>
-                    <option value="edit">Cột: Bản edit</option>
-                    <option value="meaning">Cột: Nghĩa của từ</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-file" id="btn-close-modal">Hủy</button>
-                <button class="btn-tool" id="btn-do-replace">✔️ Thay thế tất cả</button>
+            
+            <div class="modal-actions" style="margin-top: 15px; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
+                <button class="btn-file" id="btn-close-modal" style="margin-right: auto;">Hủy</button>
+                <button class="btn-reset" id="btn-clear-highlight" title="Xóa tất cả các tô sáng tìm kiếm tạm thời">🧹 Xóa tô sáng</button>
+                <button class="btn-tool" id="btn-highlight-all" title="Tô sáng tất cả kết quả tìm thấy">🖌️ Tô sáng tất cả</button>
+                <button class="btn-add" id="btn-replace-next" title="Thay thế từ tiếp theo">✔️ Thay thế</button>
+                <button class="btn-add" id="btn-replace-all" style="background-color: var(--btn-success);" title="Thay thế toàn bộ bảng">✔️ Thay thế tất cả</button>
             </div>
         </div>
     </div>
@@ -311,8 +450,11 @@
         let dragStartRowIdx = -1;
         let lastHistoryTime = 0; 
 
+        // Ngăn bộ đệm Undo/Redo nội bộ của trình duyệt để quản lý chuẩn xác bằng JS
+        let undoStack = [];
+        let redoStack = [];
+
         // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
-        // Bổ sung các biến "active" (đậm hơn cho nền sáng) và "hover" mềm cho từng theme
         const themes = {
             light: { bg: '#f8fafc', text: '#334155', active: '#cbd5e1', hover: 'rgba(0,0,0,0.03)' },
             sepia: { bg: '#f5eedc', text: '#4a3622', active: '#d6c5a3', hover: '#ebdcb9' },
@@ -402,7 +544,7 @@
             columns.forEach(col => {
                 const td = document.createElement('td');
                 td.contentEditable = true;
-                td.innerText = rowObj[col] || ''; 
+                td.innerHTML = rowObj[col] || ''; 
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
@@ -416,7 +558,7 @@
                 columns.forEach(col => {
                     const td = document.createElement('td');
                     td.contentEditable = true;
-                    td.innerText = row[col] || ''; 
+                    td.innerHTML = row[col] || ''; 
                     tr.appendChild(td);
                 });
                 fragment.appendChild(tr);
@@ -426,7 +568,65 @@
 
         renderTable();
 
-        // ---------------- HÀM QUẢN LÝ LỊCH SỬ ----------------
+        // ---------------- HỆ THỐNG UNDO / REDO NỘI BỘ (CHO SOẠN THẢO) ----------------
+        function saveUndoState() {
+            undoStack.push(JSON.stringify(data));
+            if (undoStack.length > 50) undoStack.shift(); // Giới hạn 50 bước hoàn tác
+            redoStack = []; // Reset hàng đợi redo khi có thao tác mới
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(JSON.stringify(data));
+            const prevState = JSON.parse(undoStack.pop());
+            data = prevState;
+            renderTable();
+            debounceSave();
+            updateUndoRedoButtons();
+            showToast('↩️ Đã hoàn tác (Undo)', 'var(--btn-info)');
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(JSON.stringify(data));
+            const nextState = JSON.parse(redoStack.pop());
+            data = nextState;
+            renderTable();
+            debounceSave();
+            updateUndoRedoButtons();
+            showToast('🔁 Đã làm lại (Redo)', 'var(--btn-info)');
+        }
+
+        function updateUndoRedoButtons() {
+            document.getElementById('btn-undo').disabled = undoStack.length === 0;
+            document.getElementById('btn-redo').disabled = redoStack.length === 0;
+        }
+
+        // Lắng nghe phím tắt toàn cục
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                const key = e.key.toLowerCase();
+                if (key === 'z') {
+                    e.preventDefault();
+                    undo();
+                } else if (key === 'y') {
+                    e.preventDefault();
+                    redo();
+                } else if (key === 'b') {
+                    e.preventDefault();
+                    execFormat('bold');
+                } else if (key === 'i') {
+                    e.preventDefault();
+                    execFormat('italic');
+                } else if (key === 'u') {
+                    e.preventDefault();
+                    execFormat('underline');
+                }
+            }
+        });
+
+        // ---------------- HÀM QUẢN LÝ LỊCH SỬ LỚN ----------------
         function addHistoryEntry() {
             let history = JSON.parse(localStorage.getItem('translationHistory')) || [];
             const currentDataCopy = JSON.parse(JSON.stringify(data));
@@ -471,7 +671,7 @@
                     }
                 };
                 item.appendChild(info);
-                item.appendChild(restoreBtn); // Sửa hoàn toàn lỗi cú pháp tại đây
+                item.appendChild(restoreBtn); 
                 historyListDiv.appendChild(item);
             }
         }
@@ -485,7 +685,6 @@
             const selectedTrs = [];
             
             trs.forEach(tr => {
-                // Kiểm tra xem trình duyệt có đang bôi đen bất cứ thành phần nào của TR này ko
                 if (selection.containsNode(tr, true)) {
                     selectedTrs.push(tr);
                 }
@@ -495,9 +694,9 @@
 
         // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
         document.getElementById('table-container').addEventListener('mouseup', () => {
-            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen và không ảnh hưởng bôi đen chữ
+            setTimeout(() => { 
                 const selectedRows = getSelectedRows();
-                if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
+                if (selectedRows.length > 1) { 
                     tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
                     selectedRowIndices = selectedRows.map(tr => Array.from(tbody.children).indexOf(tr));
                     selectedRowIndices.forEach(idx => {
@@ -515,19 +714,14 @@
             const clipboardText = (e.originalEvent || e).clipboardData.getData('text/plain');
             if (!clipboardText) return;
 
-            // Tách dòng
             let lines = clipboardText.split(/\r\n|\r|\n|\u2028|\u2029/);
-            
-            // SUPER PASTE: Lột sạch khoảng trắng thừa, KÝ TỰ ẨN (Zero-width space) và XÓA CÁC DÒNG TRỐNG
             lines = lines.map(line => line.replace(/[\u200B-\u200F\uFEFF\u202A-\u202E]/g, '').trim());
-            
-            // Xóa sổ hoàn toàn các dòng rỗng
             lines = lines.filter(line => line !== '');
 
-            // Nếu chỉ copy đúng 1 từ/1 câu ngắn không có cột, để trình duyệt dán như bình thường
             if (lines.length <= 1 && !clipboardText.includes('\t')) return;
 
             e.preventDefault(); 
+            saveUndoState();
             addHistoryEntry(); 
 
             const tr = targetCell.closest('tr');
@@ -550,7 +744,7 @@
 
                 for (let j = 0; j < cells.length; j++) {
                     const targetColIdx = colIndex + j;
-                    if (targetColIdx >= 6) break; // Giới hạn 6 cột
+                    if (targetColIdx >= 6) break; 
 
                     const cellValue = cells[j];
                     data[rowIndex][columns[targetColIdx]] = cellValue;
@@ -560,7 +754,6 @@
                     if (targetColIdx === 1 && cellValue.trim() !== '') pinyinUpdated = true;
                 }
 
-                // Tự động dịch Pinyin nếu chỉ dán cột Raw
                 if (rawUpdated && !pinyinUpdated) {
                     const rawVal = data[rowIndex]['raw'];
                     const pinyinText = pinyin(rawVal);
@@ -579,43 +772,39 @@
             const rowIndex = Array.from(tbody.children).indexOf(tr);
             const colIndex = Array.from(tr.children).indexOf(targetCell);
 
-            const inputText = targetCell.innerText;
-            data[rowIndex][columns[colIndex]] = inputText;
+            // Lưu dữ liệu dưới dạng innerHTML để giữ các thẻ định dạng phong phú
+            data[rowIndex][columns[colIndex]] = targetCell.innerHTML;
 
-            // Tự động gen Pinyin khi nhập tay vào Raw
+            // Chuyển đổi Pinyin dựa trên văn bản thuần (textContent) để tránh dịch nhầm các thẻ HTML
             if (colIndex === 0) {
-                data[rowIndex]['pinyin'] = pinyin(inputText);
+                const plainText = targetCell.textContent;
+                data[rowIndex]['pinyin'] = pinyin(plainText);
                 tr.children[1].innerText = data[rowIndex]['pinyin'];
             }
             debounceSave();
         });
 
-        // Đổi mousedown sang focusin để KHÔNG BỊ LỖI hủy bôi đen chữ của trình duyệt
         tbody.addEventListener('focusin', (e) => {
-            if (isDragSelecting) return; // Nếu đang quét chọn hàng loạt thì ko kích hoạt nhấp đơn
+            if (isDragSelecting) return; 
             const tr = e.target.closest('tr');
             if (tr) {
                 tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
                 tr.classList.add('active-row');
                 currentRowIndex = Array.from(tbody.children).indexOf(tr);
-                selectedRowIndices = [currentRowIndex]; // Mặc định chọn 1 hàng này
+                selectedRowIndices = [currentRowIndex]; 
             }
         });
 
-        // 2. Click chuột xuống (Mousedown)
         tbody.addEventListener('mousedown', (e) => {
             const tr = e.target.closest('tr');
             if (!tr) return;
 
-            // Kiểm tra xem bạn có đang giữ Ctrl + Shift không
             if (e.ctrlKey && e.shiftKey) {
-                e.preventDefault(); // Ngăn trình duyệt nhảy con trỏ gõ phím vào ô
-                document.body.classList.add('selecting-rows'); // Tắt tính năng bôi đen chữ của trình duyệt
+                e.preventDefault(); 
+                document.body.classList.add('selecting-rows'); 
                 
                 isDragSelecting = true;
                 dragStartRowIdx = Array.from(tbody.children).indexOf(tr);
-                
-                // Reset lại vùng màu chọn cũ
                 tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
                 
                 tr.classList.add('active-row');
@@ -624,7 +813,6 @@
             }
         });
 
-        // 3. Rê chuột quét qua các hàng khác (Mouseover)
         tbody.addEventListener('mouseover', (e) => {
             if (!isDragSelecting) return;
             const tr = e.target.closest('tr');
@@ -633,10 +821,8 @@
             const currentIdx = Array.from(tbody.children).indexOf(tr);
             if (currentIdx === -1) return;
 
-            // Xóa sạch vùng màu chọn nháp cũ
             tbody.querySelectorAll('.active-row').forEach(row => row.classList.remove('active-row'));
             
-            // Tính toán khoảng quét từ hàng bắt đầu kéo đến hàng đang rê chuột qua
             const min = Math.min(dragStartRowIdx, currentIdx);
             const max = Math.max(dragStartRowIdx, currentIdx);
             
@@ -649,16 +835,16 @@
             }
         });
 
-        // 4. Thả chuột ở bất kỳ đâu trên màn hình (Mouseup)
         document.addEventListener('mouseup', () => {
             if (isDragSelecting) {
                 isDragSelecting = false;
                 dragStartRowIdx = -1;
-                document.body.classList.remove('selecting-rows'); // Mở lại bôi đen chữ mặc định
+                document.body.classList.remove('selecting-rows'); 
             }
         });
 
         document.getElementById('btn-add').addEventListener('click', () => {
+            saveUndoState();
             const newRow = createEmptyRow();
             data.push(newRow);
             appendRowToDOM(newRow, data.length - 1);
@@ -667,7 +853,6 @@
             container.scrollTop = container.scrollHeight;
         });
 
-        // NÚT XÓA HÀNG (Hỗ trợ xóa 1 hàng hoặc xóa hàng loạt các hàng đang được bôi đỏ quét chọn)
         document.getElementById('btn-delete').addEventListener('click', () => {
             if (selectedRowIndices.length > 0) {
                 const count = selectedRowIndices.length;
@@ -676,10 +861,9 @@
                     : `⚠️ Bạn có chắc chắn muốn xóa đồng thời ${count} hàng đang được chọn không?`;
                     
                 if (confirm(confirmMsg)) {
-                    addHistoryEntry(); // Lưu lịch sử dự phòng trước khi xóa số lượng lớn
+                    saveUndoState();
+                    addHistoryEntry(); 
                     
-                    // Sắp xếp thứ tự các hàng cần xóa từ dưới lên trên (giảm dần)
-                    // để khi xóa không bị lệch chỉ số mảng (index) của các hàng còn lại
                     const sortedIndices = [...selectedRowIndices].sort((a, b) => b - a);
                     
                     sortedIndices.forEach(idx => {
@@ -689,14 +873,12 @@
                         }
                     });
                     
-                    // Luôn giữ lại tối thiểu 1 hàng trống nếu lỡ tay xóa hết sạch
                     if (data.length === 0) {
                         const newRow = createEmptyRow();
                         data.push(newRow);
                         appendRowToDOM(newRow, 0);
                     }
                     
-                    // Reset lại vùng chọn và trạng thái
                     currentRowIndex = -1;
                     selectedRowIndices = [];
                     
@@ -710,6 +892,7 @@
 
         document.getElementById('btn-reset').addEventListener('click', () => {
             if (confirm("⚠️ Bạn có chắc chắn muốn xóa TOÀN BỘ dữ liệu?")) {
+                saveUndoState();
                 addHistoryEntry();
                 data = [createEmptyRow()];
                 currentRowIndex = -1;
@@ -726,7 +909,13 @@
                 showToast('⚠️ Cột Bản edit đang trống!', 'var(--btn-warning)');
                 return;
             }
-            const textToCopy = data.map(row => (row.edit || '').trim()).join('\r\n\r\n'); 
+            // Tạo bản sao tạm để bóc sạch thẻ HTML khi copy ra ngoài (Hỗ trợ định dạng Rich Text)
+            const tempDiv = document.createElement('div');
+            const textToCopy = data.map(row => {
+                tempDiv.innerHTML = row.edit || '';
+                return tempDiv.innerText.trim();
+            }).join('\r\n\r\n'); 
+
             navigator.clipboard.writeText(textToCopy).then(() => {
                 showToast('✅ Đã sao chép chương dạng tiểu thuyết!', 'var(--btn-success)');
             });
@@ -767,6 +956,7 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
+                        saveUndoState();
                         addHistoryEntry();
                         data = importedData.map(row => {
                             if(typeof row.qt === 'undefined') row.qt = '';
@@ -782,49 +972,409 @@
             fileInput.value = ''; 
         });
 
+
+        // ---------------- HỆ THỐNG ĐỊNH DẠNG RICH TEXT (SOẠN THẢO WORD) ----------------
+        function execFormat(command, value = null) {
+            saveUndoState();
+            document.execCommand(command, false, value);
+            
+            // Ép kích hoạt sự kiện input trên ô đang gõ để lưu thay đổi
+            const activeCell = document.activeElement;
+            if (activeCell && activeCell.closest('td')) {
+                const event = new Event('input', { bubbles: true });
+                activeCell.dispatchEvent(event);
+            }
+        }
+
+        // Lắng nghe sự kiện của các nút định dạng
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-redo').addEventListener('click', redo);
+        document.getElementById('btn-bold').addEventListener('click', () => execFormat('bold'));
+        document.getElementById('btn-italic').addEventListener('click', () => execFormat('italic'));
+        document.getElementById('btn-underline').addEventListener('click', () => execFormat('underline'));
+        document.getElementById('btn-strike').addEventListener('click', () => execFormat('strikeThrough'));
+        document.getElementById('btn-sub').addEventListener('click', () => execFormat('subscript'));
+        document.getElementById('btn-sup').addEventListener('click', () => execFormat('superscript'));
+        
+        document.getElementById('ribbon-font').addEventListener('change', (e) => {
+            if (e.target.value) execFormat('fontName', e.target.value);
+        });
+        document.getElementById('ribbon-size').addEventListener('change', (e) => {
+            if (e.target.value) execFormat('fontSize', e.target.value);
+        });
+        document.getElementById('ribbon-forecolor').addEventListener('input', (e) => {
+            execFormat('foreColor', e.target.value);
+        });
+        document.getElementById('ribbon-hilitecolor').addEventListener('input', (e) => {
+            execFormat('hiliteColor', e.target.value);
+        });
+
+        document.getElementById('btn-align-left').addEventListener('click', () => execFormat('justifyLeft'));
+        document.getElementById('btn-align-center').addEventListener('click', () => execFormat('justifyCenter'));
+        document.getElementById('btn-align-right').addEventListener('click', () => execFormat('justifyRight'));
+        document.getElementById('btn-align-justify').addEventListener('click', () => execFormat('justifyFull'));
+        document.getElementById('btn-list-bullet').addEventListener('click', () => execFormat('insertUnorderedList'));
+        document.getElementById('btn-list-num').addEventListener('click', () => execFormat('insertOrderedList'));
+        document.getElementById('btn-clear-format').addEventListener('click', () => execFormat('removeFormat'));
+
+        // Hàm xử lý định dạng hoa thường nâng cao trên vùng văn bản bôi đen
+        function applySelectionTransform(transformFn) {
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString();
+            const transformedText = transformFn(selectedText);
+            
+            range.deleteContents();
+            range.insertNode(document.createTextNode(transformedText));
+            
+            const activeCell = document.activeElement;
+            if (activeCell && activeCell.closest('td')) {
+                const event = new Event('input', { bubbles: true });
+                activeCell.dispatchEvent(event);
+            }
+        }
+
+        // Chuyển đổi sang bán giác (Half-width)
+        function toHalfWidth(str) {
+            return str.replace(/[\uFF01-\uFF5E]/g, (char) => {
+                return String.fromCharCode(char.charCodeAt(0) - 0xfee0);
+            }).replace(/\u3000/g, ' '); 
+        }
+
+        // Chuyển đổi sang toàn giác (Full-width)
+        function toFullWidth(str) {
+            return str.replace(/[\u0021-\u007E]/g, (char) => {
+                return String.fromCharCode(char.charCodeAt(0) + 0xfee0);
+            }).replace(/ /g, '\u3000');
+        }
+
+        document.getElementById('ribbon-case').addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (!val) return;
+            saveUndoState();
+
+            if (val === 'sentence') {
+                applySelectionTransform(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase());
+            } else if (val === 'lowercase') {
+                applySelectionTransform(s => s.toLowerCase());
+            } else if (val === 'uppercase') {
+                applySelectionTransform(s => s.toUpperCase());
+            } else if (val === 'capitalize') {
+                applySelectionTransform(s => s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '));
+            } else if (val === 'toggle') {
+                applySelectionTransform(s => s.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''));
+            } else if (val === 'half') {
+                applySelectionTransform(toHalfWidth);
+            } else if (val === 'full') {
+                applySelectionTransform(toFullWidth);
+            }
+            e.target.value = ""; // Reset dropdown sau khi dùng
+        });
+
+
+        // ---------------- THUẬT TOÁN TÌM KIẾM & THAY THẾ NÂNG CAO (CHUẨN MS WORD) ----------------
+        
+        // 1. Hàm dựng Regex chuyên dụng dựa trên cấu hình tùy chọn
+        function buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace) {
+            if (!findText) return null;
+            
+            let pattern = findText;
+            if (!useRegex) {
+                // Thoát các ký tự đặc biệt của Regex để chuyển thành tìm kiếm chuỗi chay
+                pattern = findText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                
+                if (ignorePunc) {
+                    // Cho phép dấu câu (\p{P}) xuất hiện ngẫu nhiên xen giữa các chữ
+                    pattern = pattern.split('').map(c => c + '[\\p{P}]*').join('');
+                }
+                if (ignoreSpace) {
+                    // Cho phép khoảng trắng (\s) xuất hiện ngẫu nhiên xen giữa các chữ
+                    pattern = pattern.split('').map(c => c + '[\\s]*').join('');
+                }
+            }
+            
+            if (wholeWord) {
+                // Dùng kỹ thuật Lookbehind/Lookahead Unicode để chặn biên từ Unicode một cách chuẩn xác
+                pattern = `(?<!\\p{L})${pattern}(?!\\p{L})`;
+            }
+            
+            let flags = 'g';
+            if (!matchCase) flags += 'i';
+            flags += 'u'; // Kích hoạt cờ Unicode đầy đủ
+            
+            try {
+                return new RegExp(pattern, flags);
+            } catch (e) {
+                alert("Lỗi cấu trúc biểu thức Regex: " + e.message);
+                return null;
+            }
+        }
+
+        // 2. Bảo toàn phong cách viết chữ hoa / chữ thường khi thay thế
+        function preserveCase(original, replacement) {
+            if (original === original.toUpperCase()) return replacement.toUpperCase();
+            if (original === original.toLowerCase()) return replacement.toLowerCase();
+            if (original[0] === original[0].toUpperCase()) {
+                return replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
+            }
+            return replacement;
+        }
+
+        // 3. Tìm và Thay thế an toàn bên trong các nút văn bản (Tránh làm hỏng/mất thẻ định dạng HTML)
+        function findAndReplaceInElement(element, regex, replaceFn) {
+            const textNodes = [];
+            const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            while (walk.nextNode()) {
+                textNodes.push(walk.currentNode);
+            }
+            
+            // Chạy ngược từ dưới lên để việc thay đổi text node ko làm rối chỉ số index
+            for (let i = textNodes.length - 1; i >= 0; i--) {
+                const node = textNodes[i];
+                const oldText = node.nodeValue;
+                const newText = oldText.replace(regex, replaceFn);
+                if (newText !== oldText) {
+                    node.nodeValue = newText;
+                }
+            }
+        }
+
+        // 4. Tìm và thay thế trên chuỗi HTML lưu trữ bằng cách dựng DOM ảo
+        function replaceInHTMLString(htmlString, regex, replaceFn) {
+            const div = document.createElement('div');
+            div.innerHTML = htmlString;
+            findAndReplaceInElement(div, regex, replaceFn);
+            return div.innerHTML;
+        }
+
+        // 5. Tô sáng nháp (Highlight) tất cả từ tìm thấy trong cấu trúc DOM ảo
+        function highlightInHTMLString(htmlString, regex) {
+            const div = document.createElement('div');
+            div.innerHTML = htmlString;
+            
+            const textNodes = [];
+            const walk = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            while (walk.nextNode()) {
+                textNodes.push(walk.currentNode);
+            }
+            
+            for (let i = textNodes.length - 1; i >= 0; i--) {
+                const node = textNodes[i];
+                const text = node.nodeValue;
+                
+                if (regex.test(text)) {
+                    const tempSpan = document.createElement('span');
+                    // Mã hóa ký tự HTML gốc để chống tiêm mã độc (XSS)
+                    const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    tempSpan.innerHTML = escapedText.replace(regex, (match) => {
+                        return `<span class="search-highlight" style="background-color: #fde047; color: #000000; font-weight: bold; border-radius:2px; box-shadow:0 0 3px rgba(0,0,0,0.2);">${match}</span>`;
+                    });
+                    
+                    const parent = node.parentNode;
+                    while (tempSpan.firstChild) {
+                        parent.insertBefore(tempSpan.firstChild, node);
+                    }
+                    parent.removeChild(node);
+                }
+            }
+            return div.innerHTML;
+        }
+
+        // ---------------- ĐIỀU KHIỂN SỰ KIỆN NÚT BẤM DIALOG TÌM THẾ NÂNG CAO ----------------
         const modalReplace = document.getElementById('modal-replace');
+        
         document.getElementById('btn-replace-show').addEventListener('click', () => {
             modalReplace.classList.add('show');
             document.getElementById('find-text').focus();
         });
-        document.getElementById('btn-close-modal').addEventListener('click', () => modalReplace.classList.remove('show'));
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            modalReplace.classList.remove('show');
+            renderTable(); // Trả bảng về sạch sẽ nguyên bản khi đóng hộp thoại
+        });
 
-        document.getElementById('btn-do-replace').addEventListener('click', () => {
+        // HÀM 1: TÔ SÁNG TẤT CẢ KẾT QUẢ
+        document.getElementById('btn-highlight-all').addEventListener('click', () => {
+            const findText = document.getElementById('find-text').value;
+            const useRegex = document.getElementById('opt-regex').checked;
+            const matchCase = document.getElementById('opt-match-case').checked;
+            const wholeWord = document.getElementById('opt-whole-word').checked;
+            const ignorePunc = document.getElementById('opt-ignore-punc').checked;
+            const ignoreSpace = document.getElementById('opt-ignore-space').checked;
+            const searchSelection = document.getElementById('opt-search-selection').checked;
+            const colTarget = document.getElementById('replace-column').value;
+            
+            const regex = buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace);
+            if (!regex) return;
+            
+            renderTable(); // Reset lại bảng trước khi vẽ các nhãn tô sáng mới
+            
+            const targetIndices = searchSelection && selectedRowIndices.length > 0 
+                ? selectedRowIndices 
+                : data.map((_, idx) => idx);
+                
+            let highlightedCount = 0;
+            
+            targetIndices.forEach(rowIndex => {
+                const cols = colTarget === 'all' ? columns : [colTarget];
+                cols.forEach(col => {
+                    const originalHTML = data[rowIndex][col] || '';
+                    const highlightedHTML = highlightInHTMLString(originalHTML, regex);
+                    
+                    if (highlightedHTML !== originalHTML) {
+                        const cellElement = tbody.children[rowIndex]?.children[columns.indexOf(col)];
+                        if (cellElement) {
+                            cellElement.innerHTML = highlightedHTML;
+                            highlightedCount++;
+                        }
+                    }
+                });
+            });
+            
+            if (highlightedCount > 0) {
+                showToast(`🖌️ Đã tô sáng thành công các kết quả trên màn hình!`, 'var(--btn-info)');
+            } else {
+                showToast(`❌ Không tìm thấy kết quả phù hợp!`, 'var(--btn-danger)');
+            }
+        });
+
+        // HÀM 2: XÓA TOÀN BỘ TÔ SÁNG
+        document.getElementById('btn-clear-highlight').addEventListener('click', () => {
+            renderTable(); // Hoàn trả lại nguyên mẫu HTML sạch lưu trữ trong bộ nhớ
+            showToast(`🧹 Đã xóa toàn bộ nhãn tô sáng!`, 'var(--btn-secondary)');
+        });
+
+        // HÀM 3: THAY THẾ TỪNG TỪ TIẾP THEO (REPLACE)
+        document.getElementById('btn-replace-next').addEventListener('click', () => {
             const findText = document.getElementById('find-text').value;
             const replaceText = document.getElementById('replace-text').value;
+            
+            const useRegex = document.getElementById('opt-regex').checked;
+            const matchCase = document.getElementById('opt-match-case').checked;
+            const wholeWord = document.getElementById('opt-whole-word').checked;
+            const ignorePunc = document.getElementById('opt-ignore-punc').checked;
+            const ignoreSpace = document.getElementById('opt-ignore-space').checked;
+            const casePreserve = document.getElementById('opt-case-preserve').checked;
+            const searchSelection = document.getElementById('opt-search-selection').checked;
             const colTarget = document.getElementById('replace-column').value;
-            if(!findText) return alert("Vui lòng nhập từ cần tìm!");
-
-            addHistoryEntry();
-            let matchCount = 0;
-            const regex = new RegExp(findText, 'g');
-
-            data.forEach(row => {
-                if(colTarget === 'all') {
-                    columns.forEach(col => {
-                        if(row[col] && row[col].includes(findText)) {
-                            row[col] = row[col].replace(regex, replaceText);
-                            matchCount++;
+            
+            const regex = buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace);
+            if (!regex) return;
+            
+            const targetIndices = searchSelection && selectedRowIndices.length > 0 
+                ? selectedRowIndices 
+                : data.map((_, idx) => idx);
+                
+            let replaced = false;
+            
+            const replaceFn = (match) => {
+                replaced = true;
+                if (casePreserve) {
+                    return preserveCase(match, replaceText);
+                }
+                return replaceText;
+            };
+            
+            // Duyệt từng ô và chỉ thay đổi duy nhất vị trí đầu tiên tìm thấy
+            for (let rowIndex of targetIndices) {
+                const cols = colTarget === 'all' ? columns : [colTarget];
+                for (let col of cols) {
+                    const originalHTML = data[rowIndex][col] || '';
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = originalHTML;
+                    
+                    if (regex.test(tempDiv.textContent)) {
+                        let limit = 1;
+                        const limitedReplaceFn = (match) => {
+                            if (limit > 0) {
+                                limit--;
+                                return replaceFn(match);
+                            }
+                            return match;
+                        };
+                        
+                        const newHTML = replaceInHTMLString(originalHTML, regex, limitedReplaceFn);
+                        if (replaced) {
+                            saveUndoState();
+                            addHistoryEntry();
+                            
+                            data[rowIndex][col] = newHTML;
+                            
+                            const cellElement = tbody.children[rowIndex]?.children[columns.indexOf(col)];
+                            if (cellElement) {
+                                cellElement.innerHTML = newHTML;
+                            }
+                            
+                            debounceSave();
+                            showToast(`✔️ Đã thay thế thành công 1 vị trí!`, 'var(--btn-success)');
+                            return; 
                         }
-                    });
-                } else {
-                    if(row[colTarget] && row[colTarget].includes(findText)) {
-                        row[colTarget] = row[colTarget].replace(regex, replaceText);
-                        matchCount++;
                     }
                 }
-            });
+            }
+            showToast(`❌ Không tìm thấy thêm kết quả nào khác!`, 'var(--btn-danger)');
+        });
 
-            if(matchCount > 0) {
+        // HÀM 4: THAY THẾ TOÀN BỘ (REPLACE ALL)
+        document.getElementById('btn-replace-all').addEventListener('click', () => {
+            const findText = document.getElementById('find-text').value;
+            const replaceText = document.getElementById('replace-text').value;
+            
+            const useRegex = document.getElementById('opt-regex').checked;
+            const matchCase = document.getElementById('opt-match-case').checked;
+            const wholeWord = document.getElementById('opt-whole-word').checked;
+            const ignorePunc = document.getElementById('opt-ignore-punc').checked;
+            const ignoreSpace = document.getElementById('opt-ignore-space').checked;
+            const casePreserve = document.getElementById('opt-case-preserve').checked;
+            const searchSelection = document.getElementById('opt-search-selection').checked;
+            const colTarget = document.getElementById('replace-column').value;
+            
+            const regex = buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace);
+            if (!regex) return;
+            
+            saveUndoState();
+            addHistoryEntry();
+            
+            let replacedCount = 0;
+            const replaceFn = (match) => {
+                replacedCount++;
+                if (casePreserve) {
+                    return preserveCase(match, replaceText);
+                }
+                return replaceText;
+            };
+            
+            const targetIndices = searchSelection && selectedRowIndices.length > 0 
+                ? selectedRowIndices 
+                : data.map((_, idx) => idx);
+                
+            targetIndices.forEach(rowIndex => {
+                const cols = colTarget === 'all' ? columns : [colTarget];
+                cols.forEach(col => {
+                    const originalHTML = data[rowIndex][col] || '';
+                    const newHTML = replaceInHTMLString(originalHTML, regex, replaceFn);
+                    if (newHTML !== originalHTML) {
+                        data[rowIndex][col] = newHTML;
+                    }
+                });
+            });
+            
+            if (replacedCount > 0) {
                 renderTable();
                 debounceSave();
-                showToast(`✔️ Đã thay thế thành công ở ${matchCount} vị trí!`, 'var(--btn-info)');
+                showToast(`✔️ Đã thay thế thành công toàn bộ ${replacedCount} vị trí!`, 'var(--btn-success)');
             } else {
-                showToast(`❌ Không tìm thấy từ "${findText}"`, 'var(--btn-danger)');
+                showToast(`❌ Không tìm thấy kết quả nào để thay thế!`, 'var(--btn-danger)');
             }
             modalReplace.classList.remove('show');
         });
 
+
+        // ---------------- ĐIỀU KHIỂN CÁC MODAL KHÁC ----------------
         const modalHistory = document.getElementById('modal-history');
         document.getElementById('btn-history-show').addEventListener('click', () => {
             renderHistoryList();
@@ -833,7 +1383,10 @@
         document.getElementById('btn-close-history').addEventListener('click', () => modalHistory.classList.remove('show'));
 
         window.addEventListener('click', (e) => {
-            if (e.target === modalReplace) modalReplace.classList.remove('show');
+            if (e.target === modalReplace) {
+                modalReplace.classList.remove('show');
+                renderTable(); // Hoàn trả nguyên dạng bảng khi bấm trượt ra ngoài đóng modal
+            }
             if (e.target === modalHistory) modalHistory.classList.remove('show');
         });
     </script>
