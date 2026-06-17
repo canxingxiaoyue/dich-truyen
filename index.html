@@ -451,6 +451,8 @@
         // Ngăn bộ đệm Undo/Redo nội bộ của trình duyệt để quản lý chuẩn xác bằng JS
         let undoStack = [];
         let redoStack = [];
+        let typingUndoTimeout = null;
+        let isTyping = false; // Flag trạng thái gõ phím liên tục
 
         // Khai báo bảng Combo Màu sắc cố định (Bảo vệ mắt và chuẩn độ tương phản)
         const themes = {
@@ -566,19 +568,57 @@
 
         renderTable();
 
-        // ---------------- HỆ THỐNG UNDO / REDO NỘI BỘ (CHO SOẠN THẢO) ----------------
+        // ---------------- HỆ THỐNG UNDO / REDO SOẠN THẢO (CHIA NHỎ THEO TỪNG CHỮ GÕ) ----------------
         function saveUndoState() {
-            undoStack.push(JSON.stringify(data));
+            const currentStateStr = JSON.stringify(data);
+            
+            // Chống lưu lặp các trạng thái hoàn toàn giống nhau làm rác bộ đệm
+            if (undoStack.length > 0 && undoStack[undoStack.length - 1] === currentStateStr) {
+                return; 
+            }
+            
+            undoStack.push(currentStateStr);
             if (undoStack.length > 50) undoStack.shift(); 
-            redoStack = []; 
+            redoStack = []; // Reset Redo khi có thao tác mới
             updateUndoRedoButtons();
+        }
+
+        // Quản lý việc lưu vết Undo giãn cách thông minh (giữ lại câu chữ vừa gõ)
+        function handleTypingInput() {
+            if (!isTyping) {
+                saveUndoState(); // Lưu trạng thái "Trước khi bắt đầu gõ cụm từ mới"
+                isTyping = true;
+            }
+            
+            // Tạo khoảng dừng 1 giây để chốt một bước khôi phục
+            clearTimeout(typingUndoTimeout);
+            typingUndoTimeout = setTimeout(() => {
+                saveUndoState();
+                isTyping = false;
+            }, 1000);
         }
 
         function undo() {
             if (undoStack.length === 0) return;
-            redoStack.push(JSON.stringify(data));
-            const prevState = JSON.parse(undoStack.pop());
-            data = prevState;
+            
+            // Nếu người dùng đang gõ dở, lưu lại ngay cụm chữ hiện tại trước khi lùi bước
+            if (isTyping) {
+                clearTimeout(typingUndoTimeout);
+                saveUndoState();
+                isTyping = false;
+            }
+
+            const currentStateStr = JSON.stringify(data);
+            let prevStateStr = undoStack.pop();
+            
+            // Nếu trạng thái đỉnh trùng khớp với hiện tại, lấy tiếp phần tử phía dưới
+            if (prevStateStr === currentStateStr && undoStack.length > 0) {
+                redoStack.push(prevStateStr);
+                prevStateStr = undoStack.pop();
+            }
+            
+            redoStack.push(currentStateStr);
+            data = JSON.parse(prevStateStr);
             renderTable();
             debounceSave();
             updateUndoRedoButtons();
@@ -683,6 +723,7 @@
             const selectedTrs = [];
             
             trs.forEach(tr => {
+                // Kiểm tra xem trình duyệt có đang bôi đen bất cứ thành phần nào của TR này ko
                 if (selection.containsNode(tr, true)) {
                     selectedTrs.push(tr);
                 }
@@ -692,9 +733,9 @@
 
         // Lắng nghe sự kiện bôi đen bằng kéo chuột trên bảng
         document.getElementById('table-container').addEventListener('mouseup', () => {
-            setTimeout(() => { 
+            setTimeout(() => { // Tạo độ trễ siêu nhỏ để trình duyệt cập nhật xong vùng bôi đen và không ảnh hưởng bôi đen chữ
                 const selectedRows = getSelectedRows();
-                if (selectedRows.length > 1) { 
+                if (selectedRows.length > 1) { // Chỉ kích hoạt chế độ chọn nhiều hàng khi bôi đen quét từ 2 hàng trở lên
                     tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
                     selectedRowIndices = selectedRows.map(tr => Array.from(tbody.children).indexOf(tr));
                     selectedRowIndices.forEach(idx => {
@@ -725,6 +766,7 @@
             if (lines.length <= 1 && !clipboardText.includes('\t')) return;
 
             e.preventDefault(); 
+            saveUndoState();
             addHistoryEntry(); 
 
             const tr = targetCell.closest('tr');
@@ -776,6 +818,9 @@
             const rowIndex = Array.from(tbody.children).indexOf(tr);
             const colIndex = Array.from(tr.children).indexOf(targetCell);
 
+            // Kích hoạt nạp bộ đệm Undo chữ nhỏ
+            handleTypingInput();
+
             // Lưu dữ liệu dưới dạng innerHTML để giữ các thẻ định dạng phong phú
             data[rowIndex][columns[colIndex]] = targetCell.innerHTML;
 
@@ -790,7 +835,14 @@
 
         // Đổi mousedown sang focusin để KHÔNG BỊ LỖI hủy bôi đen chữ của trình duyệt
         tbody.addEventListener('focusin', (e) => {
-            if (isDragSelecting) return; 
+            // Chốt hạ gõ phím cũ khi rời ô cũ
+            if (isTyping) {
+                clearTimeout(typingUndoTimeout);
+                saveUndoState();
+                isTyping = false;
+            }
+
+            if (isDragSelecting) return; // Nếu đang quét chọn hàng loạt thì ko kích hoạt nhấp đơn
             const tr = e.target.closest('tr');
             if (tr) {
                 tbody.querySelectorAll('.active-row').forEach(tr => tr.classList.remove('active-row'));
@@ -871,6 +923,7 @@
                     : `⚠️ Bạn có chắc chắn muốn xóa đồng thời ${count} hàng đang được chọn không?`;
                     
                 if (confirm(confirmMsg)) {
+                    saveUndoState();
                     addHistoryEntry(); // Lưu lịch sử dự phòng trước khi xóa số lượng lớn
                     
                     // Sắp xếp thứ tự các hàng cần xóa từ dưới lên trên (giảm dần)
@@ -905,6 +958,7 @@
 
         document.getElementById('btn-reset').addEventListener('click', () => {
             if (confirm("⚠️ Bạn có chắc chắn muốn xóa TOÀN BỘ dữ liệu?")) {
+                saveUndoState();
                 addHistoryEntry();
                 data = [createEmptyRow()];
                 currentRowIndex = -1;
@@ -968,6 +1022,7 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
+                        saveUndoState();
                         addHistoryEntry();
                         data = importedData.map(row => {
                             if(typeof row.qt === 'undefined') row.qt = '';
