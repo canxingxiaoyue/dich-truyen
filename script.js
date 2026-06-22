@@ -527,10 +527,13 @@ function initEditorEvents() {
     });
 
     // LỊCH SỬ DỊCH
-    document.getElementById('btn-history-show').addEventListener('click', () => {
-        renderHistoryList('editor');
-        modalHistory.classList.add('show');
-    });
+    const btnHistoryShow = document.getElementById('btn-history-show');
+    if (btnHistoryShow) {
+        btnHistoryShow.addEventListener('click', () => {
+            renderHistoryList('editor');
+            if (modalHistory) modalHistory.classList.add('show');
+        });
+    }
 
     // HOÀN TÁC TOÀN CỤC CHUNG QUA PHÍM BẤM ĐỊNH DẠNG
     document.getElementById('btn-undo').addEventListener('click', editorUndo);
@@ -595,22 +598,34 @@ function initEditorEvents() {
         }
     });
 
-    // ĐIỀU KHIỂN ĐÓNG MODAL TÌM KIẾM
-    document.getElementById('btn-close-modal').addEventListener('click', () => {
-        modalReplace.classList.remove('show');
-        renderTable(); 
-    });
+    // ĐIỀU KHIỂN ĐÓNG MODAL TÌM KIẾM (Bổ sung kiểm tra an toàn)
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', () => {
+            if (modalReplace) modalReplace.classList.remove('show');
+            renderTable(); 
+        });
+    }
 
-    // ĐIỀU KHIỂN ĐÓNG MODAL LỊCH SỬ
-    document.getElementById('btn-close-history').addEventListener('click', () => {
-        modalHistory.classList.remove('show');
-    });
+    // ĐIỀU KHIỂN ĐÓNG MODAL LỊCH SỬ (Bổ sung kiểm tra an toàn)
+    const btnCloseHistory = document.getElementById('btn-close-history');
+    if (btnCloseHistory) {
+        btnCloseHistory.addEventListener('click', () => {
+            if (modalHistory) modalHistory.classList.remove('show');
+        });
+    }
 
     // DIỀU KHIỂN CÁC NÚT TÌM KIẾM
-    document.getElementById('btn-replace-show').addEventListener('click', () => {
-        modalReplace.classList.add('show');
-        document.getElementById('find-text').focus();
-    });
+    const btnReplaceShow = document.getElementById('btn-replace-show');
+    if (btnReplaceShow) {
+        btnReplaceShow.addEventListener('click', () => {
+            if (modalReplace) {
+                modalReplace.classList.add('show');
+                document.getElementById('find-text').focus();
+            }
+        });
+    }
+    
     document.getElementById('btn-highlight-all').addEventListener('click', runHighlightAll);
     document.getElementById('btn-clear-highlight').addEventListener('click', () => {
         renderTable(); 
@@ -619,39 +634,6 @@ function initEditorEvents() {
     document.getElementById('btn-replace-next').addEventListener('click', runReplaceNext);
     document.getElementById('btn-replace-all').addEventListener('click', runReplaceAll);
 }
-
-function execFormat(command, value = null) {
-    saveEditorUndoState();
-    document.execCommand(command, false, value);
-    const activeCell = document.activeElement;
-    if (activeCell && activeCell.closest('td')) {
-        const event = new Event('input', { bubbles: true });
-        activeCell.dispatchEvent(event);
-    }
-}
-
-function applySelectionTransform(transformFn) {
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    const transformedText = transformFn(selectedText);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(transformedText));
-    const activeCell = document.activeElement;
-    if (activeCell && activeCell.closest('td')) {
-        activeCell.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-}
-
-function toHalfWidth(str) {
-    return str.replace(/[\uFF01-\uFF5E]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0)).replace(/\u3000/g, ' '); 
-}
-
-function toFullWidth(str) {
-    return str.replace(/[\u0021-\u007E]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0xfee0)).replace(/ /g, '\u3000');
-}
-
 
 // =========================================================================
 // PHẦN LOGIC MỤC 2 (LƯU THÔNG TIN TRUYỆN PHONG CÁCH EXCEL)
@@ -793,10 +775,14 @@ function initMetadataEvents() {
     // Sự kiện Undo/Redo/Lịch sử nút bấm Mục 2
     document.getElementById('btn-meta-undo').addEventListener('click', metaUndo);
     document.getElementById('btn-meta-redo').addEventListener('click', metaRedo);
-    document.getElementById('btn-history-meta-show').addEventListener('click', () => {
-        renderHistoryList('meta');
-        modalHistory.classList.add('show');
-    });
+    
+    const btnHistoryMetaShow = document.getElementById('btn-history-meta-show');
+    if (btnHistoryMetaShow) {
+        btnHistoryMetaShow.addEventListener('click', () => {
+            renderHistoryList('meta');
+            if (modalHistory) modalHistory.classList.add('show');
+        });
+    }
 }
 
 // BẢNG 1: NHÂN VẬT
@@ -1041,7 +1027,7 @@ function renderHistoryList(type) {
                     saveMetadata();
                     showToast('🕒 Khôi phục thông tin truyện thành công!', 'var(--btn-success)');
                 }
-                modalHistory.classList.remove('show');
+                if (modalHistory) modalHistory.classList.remove('show');
             }
         };
         item.appendChild(info);
@@ -1196,16 +1182,99 @@ function runReplaceAll() {
     } else {
         showToast(`❌ Không tìm thấy kết quả nào để thay thế!`, 'var(--btn-danger)');
     }
-    modalReplace.classList.remove('show');
+    if (modalReplace) modalReplace.classList.remove('show');
 }
 
-// KHỞI CHẠY LẮNG NGHE SỰ KIỆN ĐÓNG KHI CLICK NGOÀI VÙNG CHỈ ĐỊNH (Sử dụng biến toàn cục an toàn)
+function buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace) {
+    if (!findText) return null;
+    let pattern = findText;
+    if (!useRegex) {
+        pattern = findText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        if (ignorePunc) pattern = pattern.split('').map(c => c + '[\\p{P}]*').join('');
+        if (ignoreSpace) pattern = pattern.split('').map(c => c + '[\\s]*').join('');
+    }
+    if (wholeWord) pattern = `(?<!\\p{L})${pattern}(?!\\p{L})`;
+    let flags = 'g';
+    if (!matchCase) flags += 'i';
+    flags += 'u'; 
+    try { return new RegExp(pattern, flags); } catch (e) { alert("Lỗi Regex: " + e.message); return null; }
+}
+
+function preserveCase(original, replacement) {
+    if (original === original.toUpperCase()) return replacement.toUpperCase();
+    if (original === original.toLowerCase()) return replacement.toLowerCase();
+    if (original[0] === original[0].toUpperCase()) {
+        return replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
+    }
+    return replacement;
+}
+
+function findAndReplaceInElement(element, regex, replaceFn) {
+    const textNodes = [];
+    const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while (walk.nextNode()) textNodes.push(walk.currentNode);
+    for (let i = textNodes.length - 1; i >= 0; i--) {
+        const node = textNodes[i];
+        const oldText = node.nodeValue;
+        const newText = oldText.replace(regex, replaceFn);
+        if (newText !== oldText) node.nodeValue = newText;
+    }
+}
+
+function replaceInHTMLString(htmlString, regex, replaceFn) {
+    const div = document.createElement('div');
+    div.innerHTML = htmlString;
+    findAndReplaceInElement(div, regex, replaceFn);
+    return div.innerHTML;
+}
+
+function highlightInHTMLString(htmlString, regex) {
+    const div = document.createElement('div');
+    div.innerHTML = htmlString;
+    const textNodes = [];
+    const walk = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while (walk.nextNode()) textNodes.push(walk.currentNode);
+    
+    for (let i = textNodes.length - 1; i >= 0; i--) {
+        const node = textNodes[i];
+        const text = node.nodeValue;
+        if (regex.test(text)) {
+            const tempSpan = document.createElement('span');
+            const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            tempSpan.innerHTML = escaped.replace(regex, (match) => {
+                return `<span class="search-highlight" style="background-color: #fde047; color: #000000; font-weight: bold; border-radius:2px;">${match}</span>`;
+            });
+            const parent = node.parentNode;
+            while (tempSpan.firstChild) {
+                parent.insertBefore(tempSpan.firstChild, node);
+            }
+            parent.removeChild(node);
+        }
+    }
+    return div.innerHTML;
+}
+
+// KHỞI CHẠY LẮNG NGHE SỰ KIỆN ĐÓNG KHI CLICK NGOÀI VÙNG CHỈ ĐỊNH (Uỷ nhiệm click tối ưu)
 window.addEventListener('click', (e) => {
+    // Đóng Modal khi click vào lớp phủ backdrop màu tối
     if (e.target === modalReplace) {
         modalReplace.classList.remove('show');
         renderTable();
     }
     if (e.target === modalHistory) {
         modalHistory.classList.remove('show');
+    }
+    
+    // ĐÓNG HOÀN TOÀN BẰNG ỦY QUYỀN SỰ KIỆN (EVENT DELEGATION) - BẢO ĐẢM NÚT ĐÓNG KHÔNG BỊ ĐƠ
+    if (e.target.id === 'btn-close-history' || e.target.closest('#btn-close-history')) {
+        if (modalHistory) modalHistory.classList.remove('show');
+    }
+    if (e.target.id === 'btn-close-modal' || e.target.closest('#btn-close-modal')) {
+        if (modalReplace) {
+            modalReplace.classList.remove('show');
+            renderTable();
+        }
     }
 });
