@@ -9,12 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Lexend:wght@300;400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Liên kết tới file CSS riêng biệt -->
+    <!-- Liên kết tới file CSS -->
     <link rel="stylesheet" href="style.css">
     
     <!-- Thư viện Pinyin hỗ trợ dịch tự động -->
     <script src="https://unpkg.com/pinyin-pro"></script>
-    <!-- Liên kết tới file Javascript riêng biệt -->
+    <!-- Liên kết tới file Javascript -->
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -70,16 +70,16 @@
                 <div class="divider"></div>
                 
                 <button class="btn-tool" id="btn-replace-show">🔍 Tìm & Thay thế</button>
-                <button class="btn-tool" id="btn-history-show" title="Lịch sử sửa đổi">📜 Lịch sử</button>
+                <button class="btn-tool" id="btn-history-show" title="Xem lịch sử sửa đổi biên dịch">📜 Lịch sử dịch</button>
                 
                 <div class="divider"></div>
                 <button class="btn-copy" id="btn-copy" style="margin-left: auto;">📋 Copy trọn bộ Edit</button>
             </div>
 
-            <!-- THANH ĐỊNH DẠNG SẠCH SẼ (WORD RIBBON) -->
+            <!-- THANH CÔNG CỤ ĐỊNH DẠNG MỤC 1 -->
             <div class="format-toolbar">
-                <button class="format-btn" id="btn-undo" title="Hoàn tác (Ctrl+Z)" disabled>↩️ Undo</button>
-                <button class="format-btn" id="btn-redo" title="Làm lại (Ctrl+Y)" disabled>🔁 Redo</button>
+                <button class="format-btn" id="btn-undo" title="Hoàn tác biên dịch (Ctrl+Z)" disabled>↩️ Undo</button>
+                <button class="format-btn" id="btn-redo" title="Làm lại biên dịch (Ctrl+Y)" disabled>🔁 Redo</button>
                 <div class="divider"></div>
 
                 <button class="format-btn" id="btn-bold" title="In đậm (Ctrl+B)"><b>B</b></button>
@@ -137,13 +137,21 @@
             </div>
         </div>
 
-        <!-- MỤC 2: LƯU THÔNG TIN TRUYỆN (PHONG CÁCH EXCEL) -->
+        <!-- MỤC 2: LƯU THÔNG TIN TRUYỆN (BỐ CỤC ĐA NĂNG ĐƯỢC THIẾT KẾ MỚI) -->
         <div id="story-info-section" class="tab-section-content">
             <div class="story-title-bar">
                 <span class="title-label">Tên truyện:</span>
                 <input type="text" id="story-title-input" placeholder="Nhập tên truyện cần lưu...">
                 
                 <div class="story-header-actions">
+                    <!-- Các nút Undo/Redo riêng cho Mục 2 -->
+                    <button class="btn-file btn-sm" id="btn-meta-undo" title="Hoàn tác thông tin (Ctrl+Z)" disabled>↩️ Undo</button>
+                    <button class="btn-file btn-sm" id="btn-meta-redo" title="Làm lại thông tin (Ctrl+Y)" disabled>🔁 Redo</button>
+                    <div class="divider" style="height: 18px; margin: 0 4px;"></div>
+                    
+                    <!-- Nút xem lịch sử thông tin riêng -->
+                    <button class="btn-tool btn-sm" id="btn-history-meta-show" title="Xem lịch sử sửa đổi thông tin truyện">📜 Lịch sử thông tin</button>
+                    
                     <button class="btn-file btn-sm" id="btn-export-meta">💾 Lưu thông tin (.JSON)</button>
                     <button class="btn-file btn-sm" id="btn-import-meta">📂 Mở file thông tin</button>
                     <input type="file" id="metadata-file-input" accept=".json" style="display:none">
@@ -151,7 +159,7 @@
             </div>
 
             <div class="story-tables-wrapper">
-                <!-- 1. BẢNG NHÂN VẬT (XANH LÁ) -->
+                <!-- 1. BẢNG NHÂN VẬT (XANH LÁ - CỘT TRÁI TOÀN CHIỀU CAO) -->
                 <div class="story-section-box green-section">
                     <div class="section-toolbar">
                         <span>1. Nhân vật trong truyện</span>
@@ -176,9 +184,7 @@
                     </div>
                 </div>
 
-                <div class="table-divider"></div>
-
-                <!-- 2. BẢNG XƯNG HÔ (HỒNG) -->
+                <!-- 2. BẢNG XƯNG HÔ (HỒNG - TẦNG TRÊN BÊN PHẢI) -->
                 <div class="story-section-box pink-section">
                     <div class="section-toolbar">
                         <span>2. Xưng hô</span>
@@ -203,9 +209,7 @@
                     </div>
                 </div>
 
-                <div class="table-divider"></div>
-
-                <!-- 3. BẢNG THỐNG NHẤT TỪ NGỮ (VÀNG) -->
+                <!-- 3. BẢNG THỐNG NHẤT TỪ NGỮ (VÀNG - TẦNG DƯỚI BÊN PHẢI) -->
                 <div class="story-section-box yellow-section">
                     <div class="section-toolbar">
                         <span>Thống nhất từ ngữ</span>
@@ -275,11 +279,11 @@
         </div>
     </div>
 
-    <!-- Hộp thoại Lịch sử sửa đổi -->
+    <!-- Hộp thoại Lịch sử sửa đổi (Sử dụng chung giao diện, phân tách dữ liệu) -->
     <div class="modal-overlay" id="modal-history">
         <div class="modal-content">
             <h3>🕒 Lịch sử sửa đổi</h3>
-            <p class="modal-desc">Bản sao lưu tự động được lưu định kỳ mỗi 15 giây khi có thay đổi. Lưu tối đa 15 bản ghi.</p>
+            <p class="modal-desc">Bản sao lưu tự động.</p>
             <div id="history-list" class="history-container"></div>
             <div class="modal-actions">
                 <button class="btn-file" id="btn-close-history">Đóng</button>
