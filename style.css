@@ -269,11 +269,17 @@ td:focus { box-shadow: inset 0 0 0 2px var(--btn-primary); background-color: var
     color: var(--info-header-text); font-size: 1.05rem; font-weight: bold;
     outline: none; width: 320px; padding: 2px 5px; font-family: inherit;
 }
-.story-header-actions { margin-left: auto; display: flex; gap: 8px; }
+.story-header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 
+/* CSS GRID HIỆN ĐẠI CHO MỤC 2 - TRIỆT TIÊU CUỘN NGANG */
 .story-tables-wrapper {
-    display: flex; gap: 0; padding: 15px; overflow-x: auto;
-    flex-grow: 1; align-items: stretch; height: calc(100vh - 160px);
+    display: grid;
+    grid-template-columns: 1.25fr 1fr; /* Cột trái to hơn cột phải một chút */
+    grid-template-rows: 1fr 1fr; /* Cột phải chia đôi chiều dọc thành 2 hàng */
+    gap: 15px; /* Sử dụng khoảng cách tự động thoáng mắt */
+    padding: 15px;
+    height: calc(100vh - 160px);
+    overflow: hidden; /* Khóa hoàn toàn thanh cuộn ngang */
 }
 .story-section-box {
     display: flex; flex-direction: column;
@@ -281,14 +287,34 @@ td:focus { box-shadow: inset 0 0 0 2px var(--btn-primary); background-color: var
     background: var(--header-bg); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     overflow: hidden;
 }
-.green-section { width: 45%; min-width: 550px; flex-shrink: 0; }
-.pink-section { width: 35%; min-width: 450px; flex-shrink: 0; }
-.yellow-section { width: 20%; min-width: 280px; flex-shrink: 0; }
 
+/* Bảng Nhân vật dài và to nằm dọc trọn vẹn ở cột bên trái */
+.green-section {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Bảng Xưng hô ở góc trên bên phải */
+.pink-section {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Bảng Thống nhất từ ngữ ở góc dưới bên phải */
+.yellow-section {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Ẩn dọn các thanh phân cách divider thủ công cũ */
 .table-divider {
-    width: 12px; background-color: var(--bg-color);
-    border-left: 1.5px solid var(--border-color); border-right: 1.5px solid var(--border-color);
-    flex-shrink: 0;
+    display: none !important;
 }
 
 .section-toolbar {
@@ -310,7 +336,7 @@ td:focus { box-shadow: inset 0 0 0 2px var(--btn-primary); background-color: var
     border: 1px solid var(--border-color); padding: 8px; font-size: 0.85rem;
     z-index: 5; text-align: center; text-transform: none; width: auto;
 }
-.info-table td { border: 1px solid var(--border-color); padding: 8px; outline: none; word-break: break-word; vertical-align: top; }
+.info-table td { border: 1px solid var(--border-color); padding: 6px 8px; outline: none; word-break: break-word; vertical-align: top; }
 .info-table tr:hover td { background-color: var(--row-hover); }
 .info-table tr.active-info-row td { background-color: var(--row-active) !important; }
 
