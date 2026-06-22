@@ -270,7 +270,8 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn-file" id="btn-close-modal" style="margin-right: auto;">Hủy</button>
+                <!-- Sửa đổi: Nút Hủy đóng modal tìm kiếm bằng lệnh onclick trực tiếp -->
+                <button class="btn-file" id="btn-close-modal" onclick="document.getElementById('modal-replace').classList.remove('show');" style="margin-right: auto;">Hủy</button>
                 <button class="btn-reset" id="btn-clear-highlight">🧹 Xóa tô sáng</button>
                 <button class="btn-tool" id="btn-highlight-all">🖌️ Tô sáng tất cả</button>
                 <button class="btn-add" id="btn-replace-next">✔️ Thay thế</button>
@@ -286,7 +287,8 @@
             <p class="modal-desc">Bản sao lưu tự động.</p>
             <div id="history-list" class="history-container"></div>
             <div class="modal-actions">
-                <button class="btn-file" id="btn-close-history">Đóng</button>
+                <!-- Sửa đổi: Nút Đóng modal lịch sử bằng lệnh onclick trực tiếp -->
+                <button class="btn-file" id="btn-close-history" onclick="document.getElementById('modal-history').classList.remove('show');">Đóng</button>
             </div>
         </div>
     </div>
