@@ -3,7 +3,11 @@
 // =========================================================================
 const { pinyin } = pinyinPro;
 const columns = ['raw', 'pinyin', 'meaning', 'translation', 'qt', 'edit'];
-let activeTab = 'edit-tool'; // Thử nghiệm chuyển đổi tab hoạt động
+let activeTab = 'edit-tool'; 
+
+// Đưa các biến điều khiển Modal lên phạm vi toàn cục để tránh lỗi ReferenceError
+let modalReplace;
+let modalHistory;
 
 // Dữ liệu và trạng thái Mục 1 (Biên dịch)
 let data = JSON.parse(localStorage.getItem('translationData')) || [createEmptyRow()];
@@ -50,6 +54,10 @@ const themes = {
 
 // KHỞI CHẠY KHU VỰC ĐIỀU HÀNH KHI TẢI TRANG XONG
 document.addEventListener('DOMContentLoaded', () => {
+    // Gán chính xác các phần tử HTML vào biến toàn cục ngay khi trang tải xong
+    modalReplace = document.getElementById('modal-replace');
+    modalHistory = document.getElementById('modal-history');
+
     initSettings();
     initTabEvents();
     initEditorEvents();
@@ -150,7 +158,6 @@ function showToast(message, bgColor = '#10b981') {
 
 // KHỞI CHẠY TÌNH TRẠNG PHÍM ĐIỀU HƯỚNG UNDO / REDO TRÊN GIAO DIỆN
 function updateUndoRedoButtonsState() {
-    // Điều hướng các phím Mục 1
     const editorUndoBtn = document.getElementById('btn-undo');
     const editorRedoBtn = document.getElementById('btn-redo');
     if (editorUndoBtn && editorRedoBtn) {
@@ -158,7 +165,6 @@ function updateUndoRedoButtonsState() {
         editorRedoBtn.disabled = editorRedoStack.length === 0;
     }
 
-    // Điều hướng các phím Mục 2
     const metaUndoBtn = document.getElementById('btn-meta-undo');
     const metaRedoBtn = document.getElementById('btn-meta-redo');
     if (metaUndoBtn && metaRedoBtn) {
@@ -377,7 +383,6 @@ function initEditorEvents() {
         }
     });
 
-    // SỰ KIỆN QUÉT CHỌN HÀNG TRÊN TAB 1
     tbody.addEventListener('mousedown', (e) => {
         const tr = e.target.closest('tr');
         if (!tr) return;
@@ -521,10 +526,10 @@ function initEditorEvents() {
         fileInput.value = ''; 
     });
 
-    // RIÊNG LỊCH SỬ DỊCH
+    // LỊCH SỬ DỊCH
     document.getElementById('btn-history-show').addEventListener('click', () => {
         renderHistoryList('editor');
-        document.getElementById('modal-history').classList.add('show');
+        modalHistory.classList.add('show');
     });
 
     // HOÀN TÁC TOÀN CỤC CHUNG QUA PHÍM BẤM ĐỊNH DẠNG
@@ -589,6 +594,30 @@ function initEditorEvents() {
             }
         }
     });
+
+    // ĐIỀU KHIỂN ĐÓNG MODAL TÌM KIẾM
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+        modalReplace.classList.remove('show');
+        renderTable(); 
+    });
+
+    // ĐIỀU KHIỂN ĐÓNG MODAL LỊCH SỬ
+    document.getElementById('btn-close-history').addEventListener('click', () => {
+        modalHistory.classList.remove('show');
+    });
+
+    // DIỀU KHIỂN CÁC NÚT TÌM KIẾM
+    document.getElementById('btn-replace-show').addEventListener('click', () => {
+        modalReplace.classList.add('show');
+        document.getElementById('find-text').focus();
+    });
+    document.getElementById('btn-highlight-all').addEventListener('click', runHighlightAll);
+    document.getElementById('btn-clear-highlight').addEventListener('click', () => {
+        renderTable(); 
+        showToast(`🧹 Đã xóa nhãn tô sáng!`, 'var(--btn-secondary)');
+    });
+    document.getElementById('btn-replace-next').addEventListener('click', runReplaceNext);
+    document.getElementById('btn-replace-all').addEventListener('click', runReplaceAll);
 }
 
 function execFormat(command, value = null) {
@@ -766,7 +795,7 @@ function initMetadataEvents() {
     document.getElementById('btn-meta-redo').addEventListener('click', metaRedo);
     document.getElementById('btn-history-meta-show').addEventListener('click', () => {
         renderHistoryList('meta');
-        document.getElementById('modal-history').classList.add('show');
+        modalHistory.classList.add('show');
     });
 }
 
@@ -1012,7 +1041,7 @@ function renderHistoryList(type) {
                     saveMetadata();
                     showToast('🕒 Khôi phục thông tin truyện thành công!', 'var(--btn-success)');
                 }
-                document.getElementById('modal-history').classList.remove('show');
+                modalHistory.classList.remove('show');
             }
         };
         item.appendChild(info);
@@ -1167,76 +1196,16 @@ function runReplaceAll() {
     } else {
         showToast(`❌ Không tìm thấy kết quả nào để thay thế!`, 'var(--btn-danger)');
     }
-    document.getElementById('modal-replace').classList.remove('show');
+    modalReplace.classList.remove('show');
 }
 
-function buildFindRegex(findText, useRegex, matchCase, wholeWord, ignorePunc, ignoreSpace) {
-    if (!findText) return null;
-    let pattern = findText;
-    if (!useRegex) {
-        pattern = findText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        if (ignorePunc) pattern = pattern.split('').map(c => c + '[\\p{P}]*').join('');
-        if (ignoreSpace) pattern = pattern.split('').map(c => c + '[\\s]*').join('');
+// KHỞI CHẠY LẮNG NGHE SỰ KIỆN ĐÓNG KHI CLICK NGOÀI VÙNG CHỈ ĐỊNH (Sử dụng biến toàn cục an toàn)
+window.addEventListener('click', (e) => {
+    if (e.target === modalReplace) {
+        modalReplace.classList.remove('show');
+        renderTable();
     }
-    if (wholeWord) pattern = `(?<!\\p{L})${pattern}(?!\\p{L})`;
-    let flags = 'g';
-    if (!matchCase) flags += 'i';
-    flags += 'u'; 
-    try { return new RegExp(pattern, flags); } catch (e) { alert("Lỗi Regex: " + e.message); return null; }
-}
-
-function preserveCase(original, replacement) {
-    if (original === original.toUpperCase()) return replacement.toUpperCase();
-    if (original === original.toLowerCase()) return replacement.toLowerCase();
-    if (original[0] === original[0].toUpperCase()) {
-        return replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
+    if (e.target === modalHistory) {
+        modalHistory.classList.remove('show');
     }
-    return replacement;
-}
-
-function findAndReplaceInElement(element, regex, replaceFn) {
-    const textNodes = [];
-    const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    while (walk.nextNode()) textNodes.push(walk.currentNode);
-    for (let i = textNodes.length - 1; i >= 0; i--) {
-        const node = textNodes[i];
-        const oldText = node.nodeValue;
-        const newText = oldText.replace(regex, replaceFn);
-        if (newText !== oldText) node.nodeValue = newText;
-    }
-}
-
-function replaceInHTMLString(htmlString, regex, replaceFn) {
-    const div = document.createElement('div');
-    div.innerHTML = htmlString;
-    findAndReplaceInElement(div, regex, replaceFn);
-    return div.innerHTML;
-}
-
-function highlightInHTMLString(htmlString, regex) {
-    const div = document.createElement('div');
-    div.innerHTML = htmlString;
-    const textNodes = [];
-    const walk = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    while (walk.nextNode()) textNodes.push(walk.currentNode);
-    
-    for (let i = textNodes.length - 1; i >= 0; i--) {
-        const node = textNodes[i];
-        const text = node.nodeValue;
-        if (regex.test(text)) {
-            const tempSpan = document.createElement('span');
-            const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            tempSpan.innerHTML = escaped.replace(regex, (match) => {
-                return `<span class="search-highlight" style="background-color: #fde047; color: #000000; font-weight: bold; border-radius:2px;">${match}</span>`;
-            });
-            const parent = node.parentNode;
-            while (tempSpan.firstChild) {
-                parent.insertBefore(tempSpan.firstChild, node);
-            }
-            parent.removeChild(node);
-        }
-    }
-    return div.innerHTML;
-}
+});
